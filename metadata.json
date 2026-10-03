@@ -1,0 +1,6 @@
+{
+  "name": "EduSchedule Pro - Thời Khóa Biểu Dạy Kèm",
+  "description": "Hệ thống quản lý thời khóa biểu dạy kèm chuyên nghiệp chuẩn bảng tính, phân phối màu thông minh theo học sinh và môn học, hỗ trợ xuất file Excel (.xlsx) và CSV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
