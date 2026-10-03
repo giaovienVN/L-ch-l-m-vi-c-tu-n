@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import { DAYS_OF_WEEK, calculateDurationHours } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, calculateDurationHours, getStandardHourlyRate } from '../data/initialSchedule';
 import { ScheduleItem } from '../types/schedule';
 
 export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedule_ThoiKhoaBieu.csv') {
@@ -29,7 +29,7 @@ export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedu
   const rows = sortedItems.map((item, index) => {
     const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
     const duration = calculateDurationHours(item.startTime, item.endTime);
-    const rate = item.hourlyRate || 220000;
+    const rate = item.hourlyRate || getStandardHourlyRate(item.student);
     const total = duration * rate;
 
     return [
@@ -55,7 +55,7 @@ export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedu
   );
   const totalTuition = sortedItems.reduce(
     (sum, item) =>
-      sum + calculateDurationHours(item.startTime, item.endTime) * (item.hourlyRate || 220000),
+      sum + calculateDurationHours(item.startTime, item.endTime) * (item.hourlyRate || getStandardHourlyRate(item.student)),
     0
   );
 

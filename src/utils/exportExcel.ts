@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, getStandardHourlyRate } from '../data/initialSchedule';
 import { ScheduleItem } from '../types/schedule';
 
 export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'EduSchedule_ThoiKhoaBieu_Tuan.xlsx') {
@@ -230,7 +230,7 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
     const rowNum = 4 + index;
     const duration = calculateDurationHours(item.startTime, item.endTime);
     const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
-    const rate = item.hourlyRate || 220000;
+    const rate = item.hourlyRate || getStandardHourlyRate(item.student);
     const totalAmount = duration * rate;
     const colorObj = SUBJECT_COLORS[item.colorKey];
 
@@ -395,7 +395,7 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
   sortedItems.forEach((it) => {
     const key = `${it.student} - ${it.fullSubject}`;
     const dur = calculateDurationHours(it.startTime, it.endTime);
-    const cost = dur * (it.hourlyRate || 220000);
+    const cost = dur * (it.hourlyRate || getStandardHourlyRate(it.student));
 
     if (!studentMap[key]) {
       studentMap[key] = {

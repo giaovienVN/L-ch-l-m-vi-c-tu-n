@@ -1,5 +1,5 @@
 import React from 'react';
-import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND, getStandardHourlyRate } from '../data/initialSchedule';
 import { ScheduleItem } from '../types/schedule';
 import { Users, Clock, CalendarCheck, DollarSign, BookOpen, Sparkles, TrendingUp } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
         sessions: 0,
         hours: 0,
         days: [],
-        hourlyRate: it.hourlyRate || 220000,
+        hourlyRate: it.hourlyRate || getStandardHourlyRate(it.student),
       };
     }
     studentMap[key].sessions += 1;

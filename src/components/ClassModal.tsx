@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, getStandardHourlyRate } from '../data/initialSchedule';
 import { DayOfWeek, ScheduleItem, SubjectColor } from '../types/schedule';
 import { X, Clock, AlertTriangle, Check, Sparkles, Plus } from 'lucide-react';
 
@@ -83,15 +83,17 @@ export const ClassModal: React.FC<ClassModalProps> = ({
     setError(null);
   }, [initialItem, defaultDay, defaultStartTime, isOpen]);
 
-  // When student or subject changes, automatically match theme if exists
+  // When student or subject changes, automatically match theme and rate if exists
   const handleStudentChange = (val: string) => {
     setStudent(val);
+    const stdRate = getStandardHourlyRate(val);
+    setHourlyRate(stdRate);
+
     const match = allItems.find(
       (it) => it.student.toLowerCase() === val.trim().toLowerCase()
     );
     if (match) {
       setColorKey(match.colorKey);
-      if (match.hourlyRate) setHourlyRate(match.hourlyRate);
       if (match.subject) setSubject(match.subject);
       if (match.grade) setGrade(match.grade);
     }

@@ -10,6 +10,27 @@ export const DAYS_OF_WEEK: DayInfo[] = [
   { id: 'CN', name: 'Chủ Nhật', fullName: 'Chủ Nhật (CN)', shortName: 'CN', dayIndex: 7 },
 ];
 
+/**
+ * Mức học phí chuẩn theo từng học sinh:
+ * - Thuỷ Lâm, Hoàng Lâm (Lâm), Thái Sơn, Đình Duy, Đức Kiên: 150.000₫/giờ
+ * - Nhật Anh: 124.000₫/giờ
+ * - Minh Thiện, Noel: 100.000₫/giờ
+ * - Khôi: 90.000₫/giờ
+ */
+export function getStandardHourlyRate(studentName: string): number {
+  const s = (studentName || '').trim().toLowerCase();
+  if (s.includes('thuỷ lâm') || s.includes('thuy lam')) return 150000;
+  if (s.includes('hoàng lâm') || s.includes('hoang lam') || s === 'lâm' || s === 'lam') return 150000;
+  if (s.includes('thái sơn') || s.includes('thai son')) return 150000;
+  if (s.includes('đình duy') || s.includes('dinh duy')) return 150000;
+  if (s.includes('đức kiên') || s.includes('duc kien')) return 150000;
+  if (s.includes('nhật anh') || s.includes('nhat anh')) return 124000;
+  if (s.includes('minh thiện') || s.includes('minh thien')) return 100000;
+  if (s.includes('noel')) return 100000;
+  if (s.includes('khôi') || s.includes('khoi')) return 90000;
+  return 150000;
+}
+
 export const SUBJECT_COLORS: Record<string, SubjectColor> = {
   'thuy_lam_toan_10': {
     id: 'thuy_lam_toan_10',
@@ -93,10 +114,10 @@ export const SUBJECT_COLORS: Record<string, SubjectColor> = {
   },
   'lam_hoa_11': {
     id: 'lam_hoa_11',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Hoá',
     grade: '11',
-    label: 'Lâm - Hoá 11',
+    label: 'Hoàng Lâm - Hoá 11',
     bgColor: 'bg-amber-50/90',
     borderColor: 'border-amber-300',
     textColor: 'text-amber-950',
@@ -109,10 +130,10 @@ export const SUBJECT_COLORS: Record<string, SubjectColor> = {
   },
   'lam_toan_11': {
     id: 'lam_toan_11',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Toán',
     grade: '11',
-    label: 'Lâm - Toán 11',
+    label: 'Hoàng Lâm - Toán 11',
     bgColor: 'bg-emerald-50/90',
     borderColor: 'border-emerald-300',
     textColor: 'text-emerald-950',
@@ -201,7 +222,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Toán 10',
     notes: 'Sáng sớm định kỳ',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'thuy_lam_toan_10',
   },
   {
@@ -214,7 +235,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '9',
     fullSubject: 'Toán 9',
     notes: 'Luyện thi vào 10',
-    hourlyRate: 200000,
+    hourlyRate: 100000,
     colorKey: 'minh_thien_toan_9',
   },
   {
@@ -227,7 +248,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '2',
     fullSubject: 'Scr 2',
     notes: 'Lập trình Scratch cơ bản',
-    hourlyRate: 200000,
+    hourlyRate: 90000,
     colorKey: 'khoi_scr_2',
   },
 
@@ -242,7 +263,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '9',
     fullSubject: 'Toán 9',
     notes: 'Toán nâng cao 9',
-    hourlyRate: 220000,
+    hourlyRate: 100000,
     colorKey: 'noel_toan_9',
   },
   {
@@ -250,12 +271,12 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     day: 'T3',
     startTime: '20:00',
     endTime: '22:00',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Hoá',
     grade: '11',
     fullSubject: 'Hoá 11',
     notes: 'Chuyên đề Hoá hữu cơ',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'lam_hoa_11',
   },
 
@@ -270,7 +291,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Hoá 10',
     notes: 'Khác môn Toán (Màu Cyan phân biệt)',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'thuy_lam_hoa_10',
   },
   {
@@ -283,7 +304,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '9',
     fullSubject: 'Toán 9',
     notes: 'Hình học & Đại số 9',
-    hourlyRate: 220000,
+    hourlyRate: 100000,
     colorKey: 'noel_toan_9',
   },
   {
@@ -296,7 +317,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '9',
     fullSubject: 'Toán 9',
     notes: 'Luyện đề định kỳ',
-    hourlyRate: 200000,
+    hourlyRate: 100000,
     colorKey: 'minh_thien_toan_9',
   },
   {
@@ -304,12 +325,12 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     day: 'T4',
     startTime: '20:00',
     endTime: '22:00',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Toán',
     grade: '11',
     fullSubject: 'Toán 11',
     notes: 'Toán 11 (Phân biệt với Hoá 11)',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'lam_toan_11',
   },
 
@@ -324,7 +345,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '6',
     fullSubject: 'Toán tư duy 6',
     notes: 'Tư duy logic & toán số học',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'thai_son_toan_tu_duy_6',
   },
   {
@@ -337,7 +358,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '12',
     fullSubject: 'Hoá 12',
     notes: 'Luyện thi TN THPT Quốc gia',
-    hourlyRate: 300000,
+    hourlyRate: 124000,
     colorKey: 'nhat_anh_hoa_12',
   },
   {
@@ -350,7 +371,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Hoá 10',
     notes: 'Hoá học cơ bản & bài tập',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'dinh_duy_hoa_10',
   },
   {
@@ -358,12 +379,12 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     day: 'T5',
     startTime: '20:30',
     endTime: '22:30',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Hoá',
     grade: '11',
     fullSubject: 'Hoá 11',
     notes: 'Bổ trợ nâng cao',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'lam_hoa_11',
   },
 
@@ -378,7 +399,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '9',
     fullSubject: 'Toán 9',
     notes: 'Chữa bài tập tuần',
-    hourlyRate: 200000,
+    hourlyRate: 100000,
     colorKey: 'minh_thien_toan_9',
   },
   {
@@ -386,12 +407,12 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     day: 'T6',
     startTime: '20:00',
     endTime: '22:00',
-    student: 'Lâm',
+    student: 'Hoàng Lâm',
     subject: 'Hoá',
     grade: '11',
     fullSubject: 'Hoá 11',
     notes: 'Tổng kết chuyên đề',
-    hourlyRate: 250000,
+    hourlyRate: 150000,
     colorKey: 'lam_hoa_11',
   },
 
@@ -406,7 +427,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '6',
     fullSubject: 'Toán tư duy 6',
     notes: 'Học bù',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'thai_son_toan_tu_duy_6',
   },
   {
@@ -419,7 +440,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Hoá 10',
     notes: 'Hoá học 10 chuyên sâu',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'duc_kien_hoa_10',
   },
   {
@@ -432,7 +453,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '12',
     fullSubject: 'Hoá 12',
     notes: 'Đề thi thử THPT',
-    hourlyRate: 300000,
+    hourlyRate: 124000,
     colorKey: 'nhat_anh_hoa_12',
   },
   {
@@ -445,7 +466,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Hoá 10',
     notes: 'Hệ thống hóa kiến thức',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'dinh_duy_hoa_10',
   },
 
@@ -460,7 +481,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '2',
     fullSubject: 'Scr 2',
     notes: 'Dự án mini game',
-    hourlyRate: 200000,
+    hourlyRate: 90000,
     colorKey: 'khoi_scr_2',
   },
   {
@@ -473,7 +494,7 @@ export const INITIAL_SCHEDULE_ITEMS: ScheduleItem[] = [
     grade: '10',
     fullSubject: 'Hoá 10',
     notes: 'Tổng ôn tập tuần',
-    hourlyRate: 220000,
+    hourlyRate: 150000,
     colorKey: 'duc_kien_hoa_10',
   },
 ];

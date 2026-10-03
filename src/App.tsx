@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { INITIAL_SCHEDULE_ITEMS, calculateDurationHours } from './data/initialSchedule';
+import { INITIAL_SCHEDULE_ITEMS, calculateDurationHours, getStandardHourlyRate } from './data/initialSchedule';
 import { DayOfWeek, ScheduleItem, ViewMode } from './types/schedule';
 import { exportScheduleToExcel } from './utils/exportExcel';
 import { exportScheduleToCsv, copyScheduleToClipboardTsv } from './utils/exportCsv';
@@ -19,16 +19,23 @@ import {
   Plus,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'eduschedule_items_v1';
+const STORAGE_KEY = 'eduschedule_items_v2';
 
 export default function App() {
   const [items, setItems] = useState<ScheduleItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem('eduschedule_items_v2') || localStorage.getItem('eduschedule_items_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map((item: ScheduleItem) => {
+            const studentName = (item.student === 'Lâm' || item.student === 'Hoàng Lâm') ? 'Hoàng Lâm' : item.student;
+            return {
+              ...item,
+              student: studentName,
+              hourlyRate: getStandardHourlyRate(studentName),
+            };
+          });
         }
       }
     } catch {

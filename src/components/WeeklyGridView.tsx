@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND, getStandardHourlyRate } from '../data/initialSchedule';
 import { DayOfWeek, ScheduleItem } from '../types/schedule';
 import { Clock, User, BookOpen, AlertCircle, Edit2, Copy, Trash2, Plus } from 'lucide-react';
 
@@ -219,7 +219,7 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                         accentHex: '#64748B',
                       };
 
-                      const rate = item.hourlyRate || 220000;
+                      const rate = item.hourlyRate || getStandardHourlyRate(item.student);
                       const sessionTuition = duration * rate;
 
                       return (

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND } from '../data/initialSchedule';
+import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND, getStandardHourlyRate } from '../data/initialSchedule';
 import { ScheduleItem } from '../types/schedule';
 import { Search, ArrowUpDown, Edit2, Copy, Trash2, FileSpreadsheet, Download, Check, Plus } from 'lucide-react';
 
@@ -72,8 +72,8 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
         const durB = calculateDurationHours(b.startTime, b.endTime);
         comparison = durA - durB;
       } else if (sortField === 'tuition') {
-        const tA = calculateDurationHours(a.startTime, a.endTime) * (a.hourlyRate || 220000);
-        const tB = calculateDurationHours(b.startTime, b.endTime) * (b.hourlyRate || 220000);
+        const tA = calculateDurationHours(a.startTime, a.endTime) * (a.hourlyRate || getStandardHourlyRate(a.student));
+        const tB = calculateDurationHours(b.startTime, b.endTime) * (b.hourlyRate || getStandardHourlyRate(b.student));
         comparison = tA - tB;
       }
       return sortAsc ? comparison : -comparison;
@@ -100,7 +100,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
   const totalTuition = useMemo(() => {
     return sortedItems.reduce(
       (sum, it) =>
-        sum + calculateDurationHours(it.startTime, it.endTime) * (it.hourlyRate || 220000),
+        sum + calculateDurationHours(it.startTime, it.endTime) * (it.hourlyRate || getStandardHourlyRate(it.student)),
       0
     );
   }, [sortedItems]);
@@ -292,7 +292,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                     badgeText: 'text-slate-700',
                     accentHex: '#64748B',
                   };
-                  const rate = item.hourlyRate || 220000;
+                  const rate = item.hourlyRate || getStandardHourlyRate(item.student);
                   const lineTotal = duration * rate;
 
                   return (
