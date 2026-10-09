@@ -1,21 +1,1582 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EduSchedule Pro - Thời Khóa Biểu Dạy Kèm & Xuất Excel/CSV</title>
-    <meta name="description" content="Hệ thống quản lý thời khóa biểu dạy kèm chuyên nghiệp chuẩn bảng tính, phân phối màu thông minh theo học sinh và môn học, hỗ trợ xuất file Excel (.xlsx) và CSV." />
-    <meta property="og:title" content="EduSchedule Pro - Thời Khóa Biểu Dạy Kèm & Xuất Excel/CSV" />
-    <meta property="og:description" content="Hệ thống quản lý thời khóa biểu dạy kèm chuyên nghiệp chuẩn bảng tính, phân phối màu thông minh theo học sinh và môn học, hỗ trợ xuất file Excel (.xlsx) và CSV." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  </head>
-  <body class="font-sans antialiased bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduSchedule Pro - Quản Lý Thời Khóa Biểu Dạy Kèm Độc Lập</title>
+  <meta name="description" content="Hệ thống quản lý thời khóa biểu dạy kèm chuyên nghiệp, chạy độc lập trong một tệp HTML duy nhất không cần React hay cài đặt." />
+  <meta property="og:title" content="EduSchedule Pro - Thời Khóa Biểu Dạy Kèm Độc Lập" />
+  <meta property="og:description" content="Thời khóa biểu dạy kèm chuyên nghiệp chuẩn bảng tính chạy trực tiếp trên trình duyệt." />
+  
+  <!-- Tailwind CSS CDN for instant modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    };
+  </script>
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Embedded Core Styles & Print Styles */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animation utility */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-modal {
+      animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Print styles */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+      }
+      .print-shadow-none {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- ==================== HEADER BAR ==================== -->
+  <header class="no-print sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">EduSchedule Pro</h1>
+            <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              HTML Độc Lập
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">Thời Khóa Biểu Dạy Kèm & Tính Học Phí Thông Minh</p>
+        </div>
+      </div>
+
+      <!-- View Switcher -->
+      <nav class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+        <button id="btn-view-grid" onclick="setViewMode('grid')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="2"/></svg>
+          <span>Lịch Tuần Lưới</span>
+        </button>
+        <button id="btn-view-timeline" onclick="setViewMode('timeline')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
+          <span>Biểu Đồ Tuần</span>
+        </button>
+        <button id="btn-view-table" onclick="setViewMode('table')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="2"/></svg>
+          <span>Bảng Excel</span>
+        </button>
+        <button id="btn-view-stats" onclick="setViewMode('stats')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke-width="2" stroke-linecap="round"/></svg>
+          <span>Thống Kê</span>
+        </button>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <!-- Download HTML file button -->
+        <button onclick="downloadSelfHtml()" title="Lưu toàn bộ ứng dụng thành 1 file HTML duy nhất về máy" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors shadow-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Tải File .HTML</span>
+        </button>
+
+        <!-- Import CSV / Excel -->
+        <button onclick="openImportModal()" title="Nhập tệp CSV hoặc Excel (Xoá cũ hoặc nạp thêm)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors shadow-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Nhập Lịch (CSV)</span>
+        </button>
+
+        <!-- Export CSV -->
+        <button onclick="exportScheduleCsv()" title="Tải tệp CSV tiếng Việt chuẩn UTF-8 BOM" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-width="2"/></svg>
+          <span class="hidden sm:inline">Xuất CSV</span>
+        </button>
+
+        <!-- Copy TSV -->
+        <button onclick="copyScheduleTsv()" title="Sao chép bảng tính để dán trực tiếp vào Excel / Google Sheets" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/></svg>
+          <span class="hidden sm:inline">Sao Chép</span>
+        </button>
+
+        <!-- Print -->
+        <button onclick="window.print()" title="In thời khóa biểu" class="p-1.5 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9" stroke-width="2"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-width="2"/><rect x="6" y="14" width="12" height="8" stroke-width="2"/></svg>
+        </button>
+
+        <!-- Reset Button -->
+        <button onclick="openResetModal()" title="Khôi phục lại 21 ca học mẫu ban đầu" class="p-1.5 text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" stroke-width="2"/><path d="M3 3v5h5" stroke-width="2"/></svg>
+        </button>
+
+        <!-- Add Button -->
+        <button onclick="openAddModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-200 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2"/></svg>
+          <span>Thêm Ca Học</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4">
+
+    <!-- HERO SECTION & SUMMARY BAR -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        
+        <!-- Week Navigation -->
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 text-xs font-semibold">
+              <button onclick="changeWeek(-1)" class="p-1 hover:bg-white rounded text-slate-700 transition-colors" title="Tuần trước">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" stroke-width="2"/></svg>
+              </button>
+              <button onclick="resetToCurrentWeek()" class="px-2.5 py-1 hover:bg-white rounded text-slate-800 transition-colors font-bold" title="Trở về tuần hiện tại">
+                Tuần Này
+              </button>
+              <button onclick="changeWeek(1)" class="p-1 hover:bg-white rounded text-slate-700 transition-colors" title="Tuần sau">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" stroke-width="2"/></svg>
+              </button>
+            </div>
+
+            <span id="current-week-label" class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">
+              Đang tải tuần...
+            </span>
+
+            <span id="badge-is-current-week" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Hiện tại
+            </span>
+          </div>
+
+          <p id="week-date-range-text" class="text-xs text-slate-500 font-medium">
+            Tự động cập nhật theo thời gian thực
+          </p>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
+          
+          <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-indigo-700 block">Tổng Ca Học</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-classes" class="text-lg sm:text-xl font-extrabold text-indigo-950">21</span>
+              <span class="text-xs text-indigo-700/80 font-medium">ca</span>
+            </div>
+          </div>
+
+          <div class="bg-sky-50/70 border border-sky-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-sky-700 block">Tổng Giờ Dạy</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-hours" class="text-lg sm:text-xl font-extrabold text-sky-950">37.0</span>
+              <span class="text-xs text-sky-700/80 font-medium">giờ</span>
+            </div>
+          </div>
+
+          <div class="bg-emerald-50/70 border border-emerald-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-emerald-700 block">Học Phí Dự Tính</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-tuition" class="text-lg sm:text-xl font-extrabold text-emerald-950">5.09 tr</span>
+              <span class="text-xs text-emerald-700/80 font-medium">VNĐ</span>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/70 border border-amber-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-amber-700 block">Học Sinh</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-students" class="text-lg sm:text-xl font-extrabold text-amber-950">8</span>
+              <span class="text-xs text-amber-700/80 font-medium">bạn</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Quick Filter by Student -->
+      <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px] shrink-0">Lọc theo học sinh:</span>
+        <div id="student-filter-chips" class="flex items-center gap-1.5 shrink-0">
+          <!-- Dynamically populated chips -->
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 1: WEEKLY GRID VIEW -->
+    <div id="view-grid" class="space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3" id="grid-days-container">
+        <!-- 7 Days of the week dynamically populated -->
+      </div>
+    </div>
+
+    <!-- VIEW 2: TIMELINE VIEW -->
+    <div id="view-timeline" class="hidden bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
+          Biểu Đồ Trục Thời Gian Trong Tuần
+        </h3>
+        <span class="text-xs text-slate-500">Khung giờ: 06:00 - 22:30</span>
+      </div>
+      <div id="timeline-container" class="space-y-3">
+        <!-- Days with horizontal bar blocks -->
+      </div>
+    </div>
+
+    <!-- VIEW 3: DATA TABLE VIEW -->
+    <div id="view-table" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      <!-- Table Filters -->
+      <div class="p-3.5 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-1 max-w-sm">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"/></svg>
+          <input id="table-search-input" oninput="renderTableView()" type="text" placeholder="Tìm học sinh, môn học, ghi chú..." class="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" />
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <select id="table-day-filter" onchange="renderTableView()" class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-700">
+            <option value="ALL">Tất cả các ngày</option>
+            <option value="T2">Thứ Hai</option>
+            <option value="T3">Thứ Ba</option>
+            <option value="T4">Thứ Tư</option>
+            <option value="T5">Thứ Năm</option>
+            <option value="T6">Thứ Sáu</option>
+            <option value="T7">Thứ Bảy</option>
+            <option value="CN">Chủ Nhật</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-700">
+          <thead class="bg-slate-100/80 text-slate-700 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+            <tr>
+              <th class="px-3.5 py-2.5">STT</th>
+              <th class="px-3.5 py-2.5">Thứ</th>
+              <th class="px-3.5 py-2.5">Khung Giờ</th>
+              <th class="px-3.5 py-2.5">Thời Lượng</th>
+              <th class="px-3.5 py-2.5">Học Sinh</th>
+              <th class="px-3.5 py-2.5">Môn Học</th>
+              <th class="px-3.5 py-2.5">Khối</th>
+              <th class="px-3.5 py-2.5">Đơn Giá / Giờ</th>
+              <th class="px-3.5 py-2.5">Học Phí / Ca</th>
+              <th class="px-3.5 py-2.5">Ghi Chú</th>
+              <th class="px-3.5 py-2.5 text-right no-print">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100 font-medium">
+            <!-- Table rows dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 4: TUITION & STATS VIEW -->
+    <div id="view-stats" class="hidden space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Breakdown by Student -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-width="2"/></svg>
+            Thống Kê Chi Tiết Theo Học Sinh
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-100">
+                <tr>
+                  <th class="px-3 py-2">Học Sinh</th>
+                  <th class="px-3 py-2 text-center">Số Ca</th>
+                  <th class="px-3 py-2 text-center">Tổng Giờ</th>
+                  <th class="px-3 py-2 text-right">Tổng Học Phí</th>
+                </tr>
+              </thead>
+              <tbody id="stats-students-tbody" class="divide-y divide-slate-100 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Breakdown by Subject -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" stroke-width="2"/></svg>
+            Thống Kê Theo Phân Môn
+          </h3>
+          <div id="stats-subjects-container" class="space-y-2.5">
+            <!-- Dynamically populated bar charts -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL: ADD / EDIT CLASS -->
+  <div id="modal-class" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-5 space-y-4 animate-modal my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modal-class-title" class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/><line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/></svg>
+          Thêm Ca Học Mới
+        </h3>
+        <button onclick="closeClassModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+        </button>
+      </div>
+
+      <form id="form-class" onsubmit="handleSaveClass(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="input-class-id" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Day of week -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Thứ Trong Tuần</label>
+            <select id="input-class-day" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium">
+              <option value="T2">Thứ Hai (T2)</option>
+              <option value="T3">Thứ Ba (T3)</option>
+              <option value="T4">Thứ Tư (T4)</option>
+              <option value="T5">Thứ Năm (T5)</option>
+              <option value="T6">Thứ Sáu (T6)</option>
+              <option value="T7">Thứ Bảy (T7)</option>
+              <option value="CN">Chủ Nhật (CN)</option>
+            </select>
+          </div>
+
+          <!-- Start time -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Giờ Bắt Đầu</label>
+            <input type="time" id="input-class-start" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+
+          <!-- End time -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Giờ Kết Thúc</label>
+            <input type="time" id="input-class-end" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Student name -->
+          <div class="sm:col-span-2">
+            <label class="block font-bold text-slate-700 mb-1">Tên Học Sinh</label>
+            <input type="text" id="input-class-student" required placeholder="VD: Thuỷ Lâm, Minh Thiện..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+
+          <!-- Grade -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Khối Lớp</label>
+            <input type="text" id="input-class-grade" placeholder="VD: 10, 9, 11..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Subject -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Môn Học</label>
+            <input type="text" id="input-class-subject" required placeholder="VD: Toán, Hoá, Scratch..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+
+          <!-- Hourly rate -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Đơn Giá (VNĐ / Giờ)</label>
+            <input type="number" id="input-class-rate" step="1000" min="0" placeholder="VD: 150000" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+          </div>
+        </div>
+
+        <!-- Trial checkbox -->
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="input-class-trial" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
+          <label for="input-class-trial" class="text-xs font-semibold text-slate-700">
+            Ca học thử (Gắn nhãn Học thử & tính 0đ nếu miễn phí)
+          </label>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ghi Chú</label>
+          <input type="text" id="input-class-notes" placeholder="VD: Luyện đề, kiểm tra, bù lịch..." class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium" />
+        </div>
+
+        <!-- Color preset -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Tông Màu Hiển Thị</label>
+          <select id="input-class-color" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 bg-white font-medium">
+            <option value="auto">Tự động theo tên học sinh</option>
+            <option value="emerald">Xanh Ngọc (Emerald / Mint)</option>
+            <option value="sky">Xanh Da Trời (Sky Blue)</option>
+            <option value="blue">Xanh Dương (Royal Blue)</option>
+            <option value="indigo">Tím Chàm (Indigo)</option>
+            <option value="purple">Tím Tử Đinh Hương (Violet)</option>
+            <option value="amber">Vàng Cam (Amber / Gold)</option>
+            <option value="rose">Hồng Đỏ (Rose / Pink)</option>
+            <option value="slate">Xám Khói (Slate)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeClassModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
+            Hủy Bỏ
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-sm shadow-indigo-200">
+            Lưu Ca Học
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPORT CSV / TSV / EXCEL -->
+  <div id="modal-import" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full p-5 space-y-4 animate-modal my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-slate-900">Cập Nhật / Nhập Lịch Từ File</h3>
+            <p class="text-[11px] text-slate-500">Hỗ trợ định dạng CSV, TSV hoặc dán trực tiếp từ bảng tính</p>
+          </div>
+        </div>
+        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/><line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        
+        <!-- File input drop zone -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Chọn Tệp CSV / TSV Hoặc Bảng Tính</label>
+          <input type="file" id="file-import-input" accept=".csv,.tsv,.txt" onchange="handleFileSelect(event)" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-800 hover:file:bg-amber-100 border border-slate-200 rounded-xl p-1 bg-slate-50/50" />
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-200"></div>
+          <span class="flex-shrink mx-2 text-[10px] font-bold text-slate-400 uppercase">Hoặc dán nội dung văn bản</span>
+          <div class="flex-grow border-t border-slate-200"></div>
+        </div>
+
+        <!-- Textarea for paste -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Dán Văn Bản CSV / TSV Tại Đây</label>
+          <textarea id="textarea-import" rows="5" placeholder="Thứ,Giờ Bắt Đầu,Giờ Kết Thúc,Học Sinh,Môn Học,Khối,Ghi Chú,Đơn Giá&#10;T2,06:45,08:45,Thuỷ Lâm,Toán,10,Sáng sớm,150000" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-[11px] focus:ring-2 focus:ring-amber-500 bg-white"></textarea>
+        </div>
+
+        <!-- Import Mode selection -->
+        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 space-y-2">
+          <span class="font-bold text-amber-950 block">Chế Độ Nhập Dữ Liệu:</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-white border border-amber-200 cursor-pointer">
+              <input type="radio" name="import-mode" value="replace" checked class="text-amber-600 focus:ring-amber-500" />
+              <div>
+                <span class="font-bold text-slate-900 block">Xoá cũ & Thay thế toàn bộ</span>
+                <span class="text-[10px] text-slate-500">Xoá toàn bộ lịch cũ và nạp lịch mới</span>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200 cursor-pointer">
+              <input type="radio" name="import-mode" value="merge" class="text-amber-600 focus:ring-amber-500" />
+              <div>
+                <span class="font-bold text-slate-900 block">Gộp thêm vào lịch hiện tại</span>
+                <span class="text-[10px] text-slate-500">Giữ nguyên lịch cũ và thêm các ca mới</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <button type="button" onclick="clearAllSchedule()" class="text-rose-600 hover:text-rose-700 font-bold px-2 py-1 rounded hover:bg-rose-50 transition-colors">
+            Xoá Sạch Lịch Hiện Tại
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeImportModal()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
+              Đóng
+            </button>
+            <button type="button" onclick="executeImport()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition-colors shadow-sm shadow-amber-200">
+              Tiến Hành Nạp Lịch
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESET CONFIRMATION -->
+  <div id="modal-reset" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-3 animate-modal">
+      <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-width="2"/></svg>
+      </div>
+      <h3 class="font-extrabold text-slate-900 text-center text-sm sm:text-base">Khôi Phục Dữ Liệu Gốc?</h3>
+      <p class="text-xs text-slate-600 text-center">
+        Thao tác này sẽ đặt lại thời khóa biểu về 21 ca học mẫu ban đầu. Các thay đổi chưa xuất file sẽ bị ghi đè.
+      </p>
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="closeResetModal()" class="flex-1 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50">
+          Hủy Bỏ
+        </button>
+        <button onclick="confirmReset()" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm shadow-rose-200">
+          Khôi Phục Ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // --- STORAGE & DEFAULT DATA ---
+    const STORAGE_KEY = 'eduschedule_items_v3';
+
+    // 21 Sample initial schedule sessions
+    const DEFAULT_SCHEDULE_ITEMS = [
+      { id: 'sch-1', day: 'T2', startTime: '06:45', endTime: '08:45', student: 'Thuỷ Lâm', subject: 'Toán', grade: '10', fullSubject: 'Toán 10', notes: 'Sáng sớm định kỳ', hourlyRate: 150000, colorKey: 'thuy_lam_toan_10' },
+      { id: 'sch-2', day: 'T2', startTime: '17:00', endTime: '19:00', student: 'Minh Thiện', subject: 'Toán', grade: '9', fullSubject: 'Toán 9', notes: 'Luyện thi vào 10', hourlyRate: 100000, colorKey: 'minh_thien_toan_9' },
+      { id: 'sch-3', day: 'T2', startTime: '20:15', endTime: '21:15', student: 'Khôi', subject: 'Scratch', grade: '2', fullSubject: 'Scr 2', notes: 'Lập trình Scratch cơ bản', hourlyRate: 90000, colorKey: 'khoi_scr_2' },
+      
+      { id: 'sch-4', day: 'T3', startTime: '13:00', endTime: '15:00', student: 'Noel', subject: 'Toán', grade: '9', fullSubject: 'Toán 9', notes: 'Toán nâng cao 9', hourlyRate: 100000, colorKey: 'noel_toan_9' },
+      { id: 'sch-5', day: 'T3', startTime: '20:00', endTime: '22:00', student: 'Hoàng Lâm', subject: 'Hoá', grade: '11', fullSubject: 'Hoá 11', notes: 'Chuyên đề Hoá hữu cơ', hourlyRate: 150000, colorKey: 'lam_hoa_11' },
+
+      { id: 'sch-6', day: 'T4', startTime: '06:45', endTime: '08:45', student: 'Thuỷ Lâm', subject: 'Hoá', grade: '10', fullSubject: 'Hoá 10', notes: 'Khác môn Toán', hourlyRate: 150000, colorKey: 'thuy_lam_hoa_10' },
+      { id: 'sch-7', day: 'T4', startTime: '14:30', endTime: '16:30', student: 'Noel', subject: 'Toán', grade: '9', fullSubject: 'Toán 9', notes: 'Hình học & Đại số 9', hourlyRate: 100000, colorKey: 'noel_toan_9' },
+      { id: 'sch-8', day: 'T4', startTime: '17:00', endTime: '19:00', student: 'Minh Thiện', subject: 'Toán', grade: '9', fullSubject: 'Toán 9', notes: 'Luyện đề định kỳ', hourlyRate: 100000, colorKey: 'minh_thien_toan_9' },
+      { id: 'sch-9', day: 'T4', startTime: '20:00', endTime: '22:00', student: 'Hoàng Lâm', subject: 'Toán', grade: '11', fullSubject: 'Toán 11', notes: 'Toán 11 nâng cao', hourlyRate: 150000, colorKey: 'lam_toan_11' },
+
+      { id: 'sch-10', day: 'T5', startTime: '10:00', endTime: '11:00', student: 'Thái Sơn', subject: 'Toán tư duy', grade: '6', fullSubject: 'Toán tư duy 6', notes: 'Tư duy logic & toán số học', hourlyRate: 150000, colorKey: 'thai_son_toan_tu_duy_6' },
+      { id: 'sch-11', day: 'T5', startTime: '15:30', endTime: '17:30', student: 'Nhật Anh', subject: 'Hoá', grade: '12', fullSubject: 'Hoá 12', notes: 'Luyện thi TN THPT Quốc gia', hourlyRate: 124000, colorKey: 'nhat_anh_hoa_12' },
+      { id: 'sch-12', day: 'T5', startTime: '18:30', endTime: '20:30', student: 'Đình Duy', subject: 'Hoá', grade: '10', fullSubject: 'Hoá 10', notes: 'Hoá học cơ bản & bài tập', hourlyRate: 150000, colorKey: 'dinh_duy_hoa_10' },
+      { id: 'sch-13', day: 'T5', startTime: '20:30', endTime: '22:30', student: 'Hoàng Lâm', subject: 'Hoá', grade: '11', fullSubject: 'Hoá 11', notes: 'Bổ trợ nâng cao', hourlyRate: 150000, colorKey: 'lam_hoa_11' },
+
+      { id: 'sch-14', day: 'T6', startTime: '17:00', endTime: '19:00', student: 'Minh Thiện', subject: 'Toán', grade: '9', fullSubject: 'Toán 9', notes: 'Chữa bài tập tuần', hourlyRate: 100000, colorKey: 'minh_thien_toan_9' },
+      { id: 'sch-15', day: 'T6', startTime: '20:00', endTime: '22:00', student: 'Hoàng Lâm', subject: 'Hoá', grade: '11', fullSubject: 'Hoá 11', notes: 'Tổng kết chuyên đề', hourlyRate: 150000, colorKey: 'lam_hoa_11' },
+
+      { id: 'sch-16', day: 'T7', startTime: '06:00', endTime: '07:00', student: 'Thái Sơn', subject: 'Toán tư duy', grade: '6', fullSubject: 'Toán tư duy 6', notes: 'Học bù', hourlyRate: 150000, colorKey: 'thai_son_toan_tu_duy_6' },
+      { id: 'sch-17', day: 'T7', startTime: '14:00', endTime: '16:00', student: 'Đức Kiên', subject: 'Hoá', grade: '10', fullSubject: 'Hoá 10', notes: 'Hoá học 10 chuyên sâu', hourlyRate: 150000, colorKey: 'duc_kien_hoa_10' },
+      { id: 'sch-18', day: 'T7', startTime: '16:15', endTime: '18:15', student: 'Nhật Anh', subject: 'Hoá', grade: '12', fullSubject: 'Hoá 12', notes: 'Đề thi thử THPT', hourlyRate: 124000, colorKey: 'nhat_anh_hoa_12' },
+      { id: 'sch-19', day: 'T7', startTime: '18:30', endTime: '20:30', student: 'Đình Duy', subject: 'Hoá', grade: '10', fullSubject: 'Hoá 10', notes: 'Hệ thống hóa kiến thức', hourlyRate: 150000, colorKey: 'dinh_duy_hoa_10' },
+
+      { id: 'sch-20', day: 'CN', startTime: '07:30', endTime: '08:30', student: 'Khôi', subject: 'Scratch', grade: '2', fullSubject: 'Scr 2', notes: 'Dự án mini game', hourlyRate: 90000, colorKey: 'khoi_scr_2' },
+      { id: 'sch-21', day: 'CN', startTime: '09:15', endTime: '11:15', student: 'Đức Kiên', subject: 'Hoá', grade: '10', fullSubject: 'Hoá 10', notes: 'Tổng ôn tập tuần', hourlyRate: 150000, colorKey: 'duc_kien_hoa_10' }
+    ];
+
+    const DAYS_ORDER = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    const DAY_NAMES = {
+      'T2': 'Thứ Hai',
+      'T3': 'Thứ Ba',
+      'T4': 'Thứ Tư',
+      'T5': 'Thứ Năm',
+      'T6': 'Thứ Sáu',
+      'T7': 'Thứ Bảy',
+      'CN': 'Chủ Nhật'
+    };
+
+    // Color palettes for visual elegance
+    const STUDENT_PALETTES = [
+      { key: 'emerald', bg: 'bg-emerald-50/90', border: 'border-emerald-300', text: 'text-emerald-950', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-800' },
+      { key: 'sky', bg: 'bg-sky-50/90', border: 'border-sky-300', text: 'text-sky-950', badgeBg: 'bg-sky-100', badgeText: 'text-sky-800' },
+      { key: 'blue', bg: 'bg-blue-50/90', border: 'border-blue-300', text: 'text-blue-950', badgeBg: 'bg-blue-100', badgeText: 'text-blue-800' },
+      { key: 'indigo', bg: 'bg-indigo-50/90', border: 'border-indigo-300', text: 'text-indigo-950', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-800' },
+      { key: 'purple', bg: 'bg-purple-50/90', border: 'border-purple-300', text: 'text-purple-950', badgeBg: 'bg-purple-100', badgeText: 'text-purple-800' },
+      { key: 'amber', bg: 'bg-amber-50/90', border: 'border-amber-300', text: 'text-amber-950', badgeBg: 'bg-amber-100', badgeText: 'text-amber-800' },
+      { key: 'rose', bg: 'bg-rose-50/90', border: 'border-rose-300', text: 'text-rose-950', badgeBg: 'bg-rose-100', badgeText: 'text-rose-800' },
+      { key: 'slate', bg: 'bg-slate-100/90', border: 'border-slate-300', text: 'text-slate-900', badgeBg: 'bg-slate-200', badgeText: 'text-slate-800' }
+    ];
+
+    function getStudentPalette(studentName, colorKey) {
+      if (colorKey && colorKey !== 'auto') {
+        const found = STUDENT_PALETTES.find(p => p.key === colorKey);
+        if (found) return found;
+      }
+      // Hash based on student name
+      let hash = 0;
+      for (let i = 0; i < (studentName || '').length; i++) {
+        hash = (hash << 5) - hash + studentName.charCodeAt(i);
+        hash |= 0;
+      }
+      const index = Math.abs(hash) % STUDENT_PALETTES.length;
+      return STUDENT_PALETTES[index];
+    }
+
+    // --- STATE VARIABLES ---
+    let scheduleItems = loadScheduleFromStorage();
+    let currentViewMode = 'grid'; // 'grid' | 'timeline' | 'table' | 'stats'
+    let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
+    let selectedStudentFilter = null; // null = all
+
+    // Load from LocalStorage
+    function loadScheduleFromStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Storage read error:', e);
+      }
+      return [...DEFAULT_SCHEDULE_ITEMS];
+    }
+
+    // Save to LocalStorage
+    function saveScheduleToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduleItems));
+      } catch (e) {
+        console.warn('Storage write error:', e);
+      }
+    }
+
+    // --- DURATION & MONEY HELPERS ---
+    function calculateDurationHours(startTime, endTime) {
+      if (!startTime || !endTime) return 0;
+      const [sh, sm] = startTime.split(':').map(Number);
+      const [eh, em] = endTime.split(':').map(Number);
+      const startMin = sh * 60 + sm;
+      const endMin = eh * 60 + em;
+      const diff = Math.max(0, endMin - startMin);
+      return Number((diff / 60).toFixed(2));
+    }
+
+    function formatDurationText(hours) {
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (m === 0) return `${h}h`;
+      if (h === 0) return `${m}p`;
+      return `${h}h ${m}p`;
+    }
+
+    function formatCurrencyVND(amount) {
+      return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0
+      }).format(amount || 0);
+    }
+
+    // --- DATE & WEEK UTILITIES ---
+    function getMondayOfReferenceWeek(offsetWeeks = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetWeeks * 7);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function getWeekDates(offsetWeeks = 0) {
+      const monday = getMondayOfReferenceWeek(offsetWeeks);
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        days.push(date);
+      }
+      return days;
+    }
+
+    function formatDateDM(date) {
+      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      return `${d}/${m}`;
+    }
+
+    function isSameDate(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate();
+    }
+
+    // --- VIEW SWITCHING ---
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      
+      const views = ['grid', 'timeline', 'table', 'stats'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const btn = document.getElementById(`btn-view-${v}`);
+        if (v === mode) {
+          el.classList.remove('hidden');
+          btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold';
+        } else {
+          el.classList.add('hidden');
+          btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900';
+        }
+      });
+
+      renderAllViews();
+    }
+
+    // --- WEEK NAVIGATION ---
+    function changeWeek(delta) {
+      currentWeekOffset += delta;
+      renderHeaderAndSummary();
+      renderAllViews();
+    }
+
+    function resetToCurrentWeek() {
+      currentWeekOffset = 0;
+      renderHeaderAndSummary();
+      renderAllViews();
+    }
+
+    // --- RENDER HEADER, SUMMARY & CHIPS ---
+    function renderHeaderAndSummary() {
+      const weekDates = getWeekDates(currentWeekOffset);
+      const startDate = weekDates[0];
+      const endDate = weekDates[6];
+
+      // Format current week label
+      const weekLabelEl = document.getElementById('current-week-label');
+      const isCurrentWeek = currentWeekOffset === 0;
+      
+      const startStr = `${startDate.getDate()} thg ${startDate.getMonth() + 1}`;
+      const endStr = `${endDate.getDate()} thg ${endDate.getMonth() + 1}, ${endDate.getFullYear()}`;
+      weekLabelEl.textContent = `Tuần: ${startStr} - ${endStr}`;
+
+      const badgeCurrent = document.getElementById('badge-is-current-week');
+      if (isCurrentWeek) {
+        badgeCurrent.classList.remove('hidden');
+      } else {
+        badgeCurrent.classList.add('hidden');
+      }
+
+      // Calculate totals
+      let totalHours = 0;
+      let totalTuition = 0;
+      const studentsSet = new Set();
+
+      scheduleItems.forEach(item => {
+        const hours = calculateDurationHours(item.startTime, item.endTime);
+        totalHours += hours;
+        if (!item.isTrial) {
+          const rate = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+          totalTuition += Math.round(hours * rate);
+        }
+        if (item.student) studentsSet.add(item.student);
+      });
+
+      document.getElementById('kpi-total-classes').textContent = scheduleItems.length;
+      document.getElementById('kpi-total-hours').textContent = totalHours.toFixed(1);
+      document.getElementById('kpi-total-tuition').textContent = (totalTuition / 1000000).toFixed(2) + ' tr';
+      document.getElementById('kpi-total-students').textContent = studentsSet.size;
+
+      // Render filter chips
+      const chipsContainer = document.getElementById('student-filter-chips');
+      chipsContainer.innerHTML = '';
+
+      // "All" chip
+      const allBtn = document.createElement('button');
+      allBtn.className = `px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
+        selectedStudentFilter === null 
+          ? 'bg-slate-900 text-white shadow-xs' 
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+      }`;
+      allBtn.textContent = `Tất cả (${scheduleItems.length})`;
+      allBtn.onclick = () => {
+        selectedStudentFilter = null;
+        renderHeaderAndSummary();
+        renderAllViews();
+      };
+      chipsContainer.appendChild(allBtn);
+
+      // Student chips
+      const sortedStudents = Array.from(studentsSet).sort();
+      sortedStudents.forEach(st => {
+        const count = scheduleItems.filter(i => i.student === st).length;
+        const btn = document.createElement('button');
+        const isSelected = selectedStudentFilter === st;
+        btn.className = `px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+          isSelected 
+            ? 'bg-indigo-600 text-white shadow-xs' 
+            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        }`;
+        btn.innerHTML = `<span>${st}</span><span class="text-[10px] opacity-75 font-mono">(${count})</span>`;
+        btn.onclick = () => {
+          selectedStudentFilter = isSelected ? null : st;
+          renderHeaderAndSummary();
+          renderAllViews();
+        };
+        chipsContainer.appendChild(btn);
+      });
+    }
+
+    // --- RENDER GRID VIEW ---
+    function renderGridView() {
+      const container = document.getElementById('grid-days-container');
+      container.innerHTML = '';
+
+      const weekDates = getWeekDates(currentWeekOffset);
+      const today = new Date();
+
+      DAYS_ORDER.forEach((dayKey, index) => {
+        const dateObj = weekDates[index];
+        const isToday = isSameDate(dateObj, today);
+
+        // Filter items for this day
+        let dayItems = scheduleItems.filter(i => i.day === dayKey);
+        if (selectedStudentFilter) {
+          dayItems = dayItems.filter(i => i.student === selectedStudentFilter);
+        }
+
+        // Sort items by start time
+        dayItems.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        const dayCard = document.createElement('div');
+        dayCard.className = `bg-white rounded-2xl border ${
+          isToday ? 'border-indigo-400 ring-2 ring-indigo-200/80 shadow-md' : 'border-slate-200/90 shadow-xs'
+        } flex flex-col min-h-[380px] overflow-hidden`;
+
+        // Day Header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = `p-3 border-b border-slate-100 flex items-center justify-between ${
+          isToday ? 'bg-gradient-to-r from-indigo-50/90 to-violet-50/70' : 'bg-slate-50/70'
+        }`;
+        headerDiv.innerHTML = `
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-sm ${isToday ? 'text-indigo-900' : 'text-slate-800'}">
+                ${DAY_NAMES[dayKey]}
+              </span>
+              ${isToday ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-indigo-600 text-white uppercase tracking-wider">Hôm nay</span>' : ''}
+            </div>
+            <span class="text-[11px] font-semibold text-slate-500">${formatDateDM(dateObj)}</span>
+          </div>
+          <button onclick="openAddModal('${dayKey}')" class="p-1 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white transition-colors" title="Thêm ca cho ${DAY_NAMES[dayKey]}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke-width="2"/></svg>
+          </button>
+        `;
+        dayCard.appendChild(headerDiv);
+
+        // Classes Body
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'p-2 flex-1 space-y-2 overflow-y-auto max-h-[500px]';
+
+        if (dayItems.length === 0) {
+          bodyDiv.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center py-10 text-center px-2">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
+              </div>
+              <span class="text-[11px] text-slate-400 font-medium">Chưa có ca học</span>
+              <button onclick="openAddModal('${dayKey}')" class="mt-2 text-[10px] font-bold text-indigo-600 hover:underline">
+                + Thêm ca
+              </button>
+            </div>
+          `;
+        } else {
+          dayItems.forEach(item => {
+            const duration = calculateDurationHours(item.startTime, item.endTime);
+            const palette = getStudentPalette(item.student, item.colorKey);
+            const tuition = item.isTrial ? 0 : Math.round(duration * (item.hourlyRate || 150000));
+
+            const card = document.createElement('div');
+            card.className = `p-2.5 rounded-xl border ${palette.bg} ${palette.border} relative group transition-all hover:shadow-sm`;
+            card.innerHTML = `
+              <div class="flex items-start justify-between gap-1 mb-1">
+                <span class="inline-flex items-center gap-1 font-mono text-[11px] font-extrabold ${palette.text}">
+                  <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
+                  ${item.startTime} - ${item.endTime}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 font-mono">
+                  ${formatDurationText(duration)}
+                </span>
+              </div>
+
+              <div class="font-bold text-xs text-slate-900 flex items-center gap-1">
+                <span>${item.student}</span>
+                ${item.isTrial ? '<span class="px-1 py-0.2 rounded text-[9px] font-extrabold bg-amber-500 text-white">Học thử</span>' : ''}
+              </div>
+
+              <div class="flex items-center gap-1 mt-1 flex-wrap">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${palette.badgeBg} ${palette.badgeText}">
+                  ${item.subject || 'Môn học'} ${item.grade ? `(${item.grade})` : ''}
+                </span>
+                <span class="text-[10px] font-bold text-slate-600">
+                  ${item.isTrial ? '0 ₫' : formatCurrencyVND(tuition)}
+                </span>
+              </div>
+
+              ${item.notes ? `<p class="mt-1.5 text-[10px] text-slate-500 line-clamp-1 italic">${item.notes}</p>` : ''}
+
+              <!-- Actions on hover -->
+              <div class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/95 rounded-lg shadow-xs p-0.5 border border-slate-200">
+                <button onclick="openEditModal('${item.id}')" class="p-1 hover:text-indigo-600 text-slate-500 rounded" title="Chỉnh sửa">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="2"/></svg>
+                </button>
+                <button onclick="deleteClassItem('${item.id}')" class="p-1 hover:text-rose-600 text-slate-500 rounded" title="Xoá ca này">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" stroke-width="2"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-width="2"/></svg>
+                </button>
+              </div>
+            `;
+            bodyDiv.appendChild(card);
+          });
+        }
+
+        dayCard.appendChild(bodyDiv);
+        container.appendChild(dayCard);
+      });
+    }
+
+    // --- RENDER TIMELINE VIEW ---
+    function renderTimelineView() {
+      const container = document.getElementById('timeline-container');
+      container.innerHTML = '';
+
+      DAYS_ORDER.forEach(dayKey => {
+        let items = scheduleItems.filter(i => i.day === dayKey);
+        if (selectedStudentFilter) items = items.filter(i => i.student === selectedStudentFilter);
+
+        const row = document.createElement('div');
+        row.className = 'border border-slate-200 rounded-xl p-3 bg-slate-50/50';
+
+        let innerHtml = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-extrabold text-xs text-slate-800">${DAY_NAMES[dayKey]} (${items.length} ca)</span>
+            <button onclick="openAddModal('${dayKey}')" class="text-[11px] font-bold text-indigo-600 hover:underline">+ Thêm ca</button>
+          </div>
+          <div class="relative h-12 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center px-1">
+        `;
+
+        if (items.length === 0) {
+          innerHtml += `<span class="text-[11px] text-slate-400 mx-auto font-medium">Không có lịch học</span>`;
+        } else {
+          // Total window: 06:00 (360m) to 22:30 (1350m) = 990 minutes
+          const minDay = 6 * 60;
+          const maxDay = 22.5 * 60;
+          const totalMin = maxDay - minDay;
+
+          items.forEach(item => {
+            const [sh, sm] = item.startTime.split(':').map(Number);
+            const [eh, em] = item.endTime.split(':').map(Number);
+            const startM = sh * 60 + sm;
+            const endM = eh * 60 + em;
+
+            const leftPct = Math.max(0, Math.min(100, ((startM - minDay) / totalMin) * 100));
+            const widthPct = Math.max(4, Math.min(100 - leftPct, ((endM - startM) / totalMin) * 100));
+
+            const palette = getStudentPalette(item.student, item.colorKey);
+
+            innerHtml += `
+              <div 
+                style="left: ${leftPct}%; width: ${widthPct}%;" 
+                class="absolute h-9 rounded-md border ${palette.border} ${palette.bg} flex items-center justify-between px-1.5 text-[10px] cursor-pointer hover:shadow-xs transition-transform hover:scale-102"
+                onclick="openEditModal('${item.id}')"
+                title="${item.student} - ${item.subject} (${item.startTime} - ${item.endTime})"
+              >
+                <span class="font-bold truncate text-slate-900">${item.student}</span>
+                <span class="font-mono text-[9px] text-slate-500 hidden sm:inline">${item.startTime}</span>
+              </div>
+            `;
+          });
+        }
+
+        innerHtml += `</div>`;
+        row.innerHTML = innerHtml;
+        container.appendChild(row);
+      });
+    }
+
+    // --- RENDER TABLE VIEW ---
+    function renderTableView() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      const query = (document.getElementById('table-search-input').value || '').toLowerCase().trim();
+      const dayFilter = document.getElementById('table-day-filter').value;
+
+      let filtered = [...scheduleItems];
+
+      if (dayFilter !== 'ALL') {
+        filtered = filtered.filter(i => i.day === dayFilter);
+      }
+      if (selectedStudentFilter) {
+        filtered = filtered.filter(i => i.student === selectedStudentFilter);
+      }
+      if (query) {
+        filtered = filtered.filter(i => 
+          (i.student || '').toLowerCase().includes(query) ||
+          (i.subject || '').toLowerCase().includes(query) ||
+          (i.notes || '').toLowerCase().includes(query)
+        );
+      }
+
+      // Sort by Day then Start Time
+      filtered.sort((a, b) => {
+        const dDiff = DAYS_ORDER.indexOf(a.day) - DAYS_ORDER.indexOf(b.day);
+        if (dDiff !== 0) return dDiff;
+        return a.startTime.localeCompare(b.startTime);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="11" class="text-center py-8 text-slate-400 font-medium">
+              Không tìm thấy ca học nào phù hợp với bộ lọc
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      filtered.forEach((item, index) => {
+        const duration = calculateDurationHours(item.startTime, item.endTime);
+        const rate = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+        const tuition = item.isTrial ? 0 : Math.round(duration * rate);
+        const palette = getStudentPalette(item.student, item.colorKey);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors';
+        tr.innerHTML = `
+          <td class="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">${index + 1}</td>
+          <td class="px-3.5 py-2.5 font-bold text-slate-800">${DAY_NAMES[item.day]}</td>
+          <td class="px-3.5 py-2.5 font-mono text-slate-900 font-bold">${item.startTime} - ${item.endTime}</td>
+          <td class="px-3.5 py-2.5 font-mono text-slate-600">${formatDurationText(duration)}</td>
+          <td class="px-3.5 py-2.5 font-bold text-slate-900">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full ${palette.badgeBg}"></span>
+              ${item.student}
+            </span>
+          </td>
+          <td class="px-3.5 py-2.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${palette.badgeBg} ${palette.badgeText}">
+              ${item.subject || 'Môn học'}
+            </span>
+          </td>
+          <td class="px-3.5 py-2.5 text-slate-600">${item.grade || '-'}</td>
+          <td class="px-3.5 py-2.5 font-mono text-slate-700">${item.isTrial ? 'Miễn phí' : formatCurrencyVND(rate) + '/h'}</td>
+          <td class="px-3.5 py-2.5 font-mono font-bold text-emerald-700">${item.isTrial ? '0 ₫' : formatCurrencyVND(tuition)}</td>
+          <td class="px-3.5 py-2.5 text-slate-500 max-w-[180px] truncate">${item.notes || '-'}</td>
+          <td class="px-3.5 py-2.5 text-right no-print">
+            <div class="inline-flex items-center gap-1">
+              <button onclick="openEditModal('${item.id}')" class="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-100" title="Sửa">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="2"/></svg>
+              </button>
+              <button onclick="deleteClassItem('${item.id}')" class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-slate-100" title="Xoá">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" stroke-width="2"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke-width="2"/></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- RENDER STATS VIEW ---
+    function renderStatsView() {
+      const tbody = document.getElementById('stats-students-tbody');
+      tbody.innerHTML = '';
+
+      // Aggregate by Student
+      const studentMap = {};
+      const subjectMap = {};
+
+      scheduleItems.forEach(item => {
+        const st = item.student || 'Chưa đặt tên';
+        const sb = item.subject || 'Khác';
+        const dur = calculateDurationHours(item.startTime, item.endTime);
+        const rate = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+        const tuition = item.isTrial ? 0 : Math.round(dur * rate);
+
+        if (!studentMap[st]) {
+          studentMap[st] = { count: 0, hours: 0, tuition: 0 };
+        }
+        studentMap[st].count += 1;
+        studentMap[st].hours += dur;
+        studentMap[st].tuition += tuition;
+
+        if (!subjectMap[sb]) {
+          subjectMap[sb] = { count: 0, hours: 0 };
+        }
+        subjectMap[sb].count += 1;
+        subjectMap[sb].hours += dur;
+      });
+
+      // Render student table
+      Object.keys(studentMap).sort().forEach(st => {
+        const data = studentMap[st];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 font-bold text-slate-800">${st}</td>
+          <td class="px-3 py-2 text-center font-mono font-bold">${data.count}</td>
+          <td class="px-3 py-2 text-center font-mono text-slate-600">${data.hours.toFixed(1)}h</td>
+          <td class="px-3 py-2 text-right font-mono font-bold text-emerald-700">${formatCurrencyVND(data.tuition)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Render subject bars
+      const subjContainer = document.getElementById('stats-subjects-container');
+      subjContainer.innerHTML = '';
+
+      const maxHours = Math.max(...Object.values(subjectMap).map(s => s.hours), 1);
+
+      Object.keys(subjectMap).sort().forEach(sb => {
+        const data = subjectMap[sb];
+        const pct = Math.round((data.hours / maxHours) * 100);
+
+        const block = document.createElement('div');
+        block.className = 'space-y-1';
+        block.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-800">${sb} (${data.count} ca)</span>
+            <span class="font-mono text-slate-500 font-bold">${data.hours.toFixed(1)} giờ</span>
+          </div>
+          <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-indigo-600 rounded-full" style="width: ${pct}%"></div>
+          </div>
+        `;
+        subjContainer.appendChild(block);
+      });
+    }
+
+    // --- RE-RENDER ALL ---
+    function renderAllViews() {
+      if (currentViewMode === 'grid') renderGridView();
+      else if (currentViewMode === 'timeline') renderTimelineView();
+      else if (currentViewMode === 'table') renderTableView();
+      else if (currentViewMode === 'stats') renderStatsView();
+    }
+
+    // --- MODAL: CLASS ADD/EDIT ---
+    function openAddModal(day = 'T2') {
+      document.getElementById('modal-class-title').textContent = 'Thêm Ca Học Mới';
+      document.getElementById('input-class-id').value = '';
+      document.getElementById('input-class-day').value = day;
+      document.getElementById('input-class-start').value = '17:00';
+      document.getElementById('input-class-end').value = '19:00';
+      document.getElementById('input-class-student').value = '';
+      document.getElementById('input-class-subject').value = 'Toán';
+      document.getElementById('input-class-grade').value = '10';
+      document.getElementById('input-class-rate').value = '150000';
+      document.getElementById('input-class-trial').checked = false;
+      document.getElementById('input-class-notes').value = '';
+      document.getElementById('input-class-color').value = 'auto';
+
+      document.getElementById('modal-class').classList.remove('hidden');
+    }
+
+    function openEditModal(id) {
+      const item = scheduleItems.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('modal-class-title').textContent = 'Chỉnh Sửa Ca Học';
+      document.getElementById('input-class-id').value = item.id;
+      document.getElementById('input-class-day').value = item.day;
+      document.getElementById('input-class-start').value = item.startTime;
+      document.getElementById('input-class-end').value = item.endTime;
+      document.getElementById('input-class-student').value = item.student;
+      document.getElementById('input-class-subject').value = item.subject || '';
+      document.getElementById('input-class-grade').value = item.grade || '';
+      document.getElementById('input-class-rate').value = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+      document.getElementById('input-class-trial').checked = !!item.isTrial;
+      document.getElementById('input-class-notes').value = item.notes || '';
+      document.getElementById('input-class-color').value = item.colorKey || 'auto';
+
+      document.getElementById('modal-class').classList.remove('hidden');
+    }
+
+    function closeClassModal() {
+      document.getElementById('modal-class').classList.add('hidden');
+    }
+
+    function handleSaveClass(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('input-class-id').value;
+      const day = document.getElementById('input-class-day').value;
+      const startTime = document.getElementById('input-class-start').value;
+      const endTime = document.getElementById('input-class-end').value;
+      const student = document.getElementById('input-class-student').value.trim();
+      const subject = document.getElementById('input-class-subject').value.trim();
+      const grade = document.getElementById('input-class-grade').value.trim();
+      const hourlyRate = Number(document.getElementById('input-class-rate').value) || 0;
+      const isTrial = document.getElementById('input-class-trial').checked;
+      const notes = document.getElementById('input-class-notes').value.trim();
+      const colorKey = document.getElementById('input-class-color').value;
+
+      if (startTime >= endTime) {
+        showToast('Giờ bắt đầu phải trước giờ kết thúc!');
+        return;
+      }
+
+      if (id) {
+        // Edit existing
+        const index = scheduleItems.findIndex(i => i.id === id);
+        if (index !== -1) {
+          scheduleItems[index] = {
+            ...scheduleItems[index],
+            day, startTime, endTime, student, subject, grade,
+            hourlyRate, isTrial, notes, colorKey,
+            fullSubject: grade ? `${subject} ${grade}` : subject
+          };
+          showToast(`Đã cập nhật ca học của ${student}`);
+        }
+      } else {
+        // Add new
+        const newItem = {
+          id: 'sch-' + Date.now(),
+          day, startTime, endTime, student, subject, grade,
+          hourlyRate, isTrial, notes, colorKey,
+          fullSubject: grade ? `${subject} ${grade}` : subject
+        };
+        scheduleItems.push(newItem);
+        showToast(`Đã thêm ca học mới cho ${student}`);
+      }
+
+      saveScheduleToStorage();
+      closeClassModal();
+      renderHeaderAndSummary();
+      renderAllViews();
+    }
+
+    function deleteClassItem(id) {
+      const index = scheduleItems.findIndex(i => i.id === id);
+      if (index === -1) return;
+      const item = scheduleItems[index];
+      scheduleItems.splice(index, 1);
+      saveScheduleToStorage();
+      renderHeaderAndSummary();
+      renderAllViews();
+      showToast(`Đã xoá ca học của ${item.student}`);
+    }
+
+    // --- MODAL: IMPORT CSV / EXCEL ---
+    function openImportModal() {
+      document.getElementById('modal-import').classList.remove('hidden');
+    }
+
+    function closeImportModal() {
+      document.getElementById('modal-import').classList.add('hidden');
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('textarea-import').value = evt.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    function executeImport() {
+      const text = document.getElementById('textarea-import').value.trim();
+      if (!text) {
+        showToast('Vui lòng dán hoặc chọn file CSV/TSV!');
+        return;
+      }
+
+      const modeRadio = document.querySelector('input[name="import-mode"]:checked');
+      const mode = modeRadio ? modeRadio.value : 'replace';
+
+      const parsedItems = parseCsvText(text);
+      if (parsedItems.length === 0) {
+        showToast('Không đọc được dòng dữ liệu hợp lệ nào từ tệp!');
+        return;
+      }
+
+      if (mode === 'replace') {
+        scheduleItems = parsedItems;
+        showToast(`Đã xoá lịch cũ và nạp ${parsedItems.length} ca học mới!`);
+      } else {
+        scheduleItems = [...scheduleItems, ...parsedItems];
+        showToast(`Đã gộp thêm ${parsedItems.length} ca học vào lịch!`);
+      }
+
+      saveScheduleToStorage();
+      closeImportModal();
+      renderHeaderAndSummary();
+      renderAllViews();
+    }
+
+    function clearAllSchedule() {
+      scheduleItems = [];
+      saveScheduleToStorage();
+      closeImportModal();
+      renderHeaderAndSummary();
+      renderAllViews();
+      showToast('Đã xoá sạch lịch!');
+    }
+
+    // Flexible CSV / TSV parser
+    function parseCsvText(text) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length < 1) return [];
+
+      const items = [];
+      const delimiter = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+
+      let startIndex = 0;
+      // If first row has headers, skip it
+      if (lines[0].toLowerCase().includes('thứ') || lines[0].toLowerCase().includes('sinh') || lines[0].toLowerCase().includes('bắt đầu')) {
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const parts = lines[i].split(delimiter).map(p => p.trim().replace(/^["']|["']$/g, ''));
+        if (parts.length < 4) continue;
+
+        // Try mapping by column order:
+        // Case 1: [STT, Day, Start, End, Duration, Student, Subject, Grade, FullSubject, Notes, Rate] (Export format)
+        // Case 2: [Day, Start, End, Student, Subject, Grade, Notes, Rate]
+        let day = 'T2';
+        let startTime = '17:00';
+        let endTime = '19:00';
+        let student = 'Học sinh';
+        let subject = 'Toán';
+        let grade = '';
+        let notes = '';
+        let rate = 150000;
+
+        if (parts[1] && (parts[1].includes(':') || parts[2]?.includes(':'))) {
+          // Has STT as column 0
+          day = normalizeDay(parts[1]);
+          startTime = parts[2] || '17:00';
+          endTime = parts[3] || '19:00';
+          student = parts[5] || parts[4] || 'Học sinh';
+          subject = parts[6] || parts[5] || 'Toán';
+          grade = parts[7] || '';
+          notes = parts[9] || parts[8] || '';
+          rate = Number(parts[10]) || 150000;
+        } else {
+          day = normalizeDay(parts[0]);
+          startTime = parts[1] || '17:00';
+          endTime = parts[2] || '19:00';
+          student = parts[3] || 'Học sinh';
+          subject = parts[4] || 'Toán';
+          grade = parts[5] || '';
+          notes = parts[6] || '';
+          rate = Number(parts[7]) || 150000;
+        }
+
+        items.push({
+          id: 'sch-' + Date.now() + '-' + i,
+          day,
+          startTime: startTime.padStart(5, '0'),
+          endTime: endTime.padStart(5, '0'),
+          student,
+          subject,
+          grade,
+          fullSubject: grade ? `${subject} ${grade}` : subject,
+          notes,
+          hourlyRate: rate,
+          colorKey: 'auto'
+        });
+      }
+
+      return items;
+    }
+
+    function normalizeDay(str = '') {
+      const s = str.toLowerCase();
+      if (s.includes('hai') || s.includes('2') || s === 't2') return 'T2';
+      if (s.includes('ba') || s.includes('3') || s === 't3') return 'T3';
+      if (s.includes('tư') || s.includes('4') || s === 't4') return 'T4';
+      if (s.includes('năm') || s.includes('5') || s === 't5') return 'T5';
+      if (s.includes('sáu') || s.includes('6') || s === 't6') return 'T6';
+      if (s.includes('bảy') || s.includes('7') || s === 't7') return 'T7';
+      if (s.includes('nhật') || s === 'cn') return 'CN';
+      return 'T2';
+    }
+
+    // --- MODAL: RESET ---
+    function openResetModal() {
+      document.getElementById('modal-reset').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('modal-reset').classList.add('hidden');
+    }
+
+    function confirmReset() {
+      scheduleItems = [...DEFAULT_SCHEDULE_ITEMS];
+      saveScheduleToStorage();
+      closeResetModal();
+      renderHeaderAndSummary();
+      renderAllViews();
+      showToast('Đã khôi phục 21 ca học mẫu ban đầu!');
+    }
+
+    // --- EXPORT CSV WITH UTF-8 BOM ---
+    function exportScheduleCsv() {
+      const headers = ['STT', 'Thứ Trong Tuần', 'Giờ Bắt Đầu', 'Giờ Kết Thúc', 'Thời Lượng (Giờ)', 'Tên Học Sinh', 'Môn Học', 'Khối Lớp', 'Phân Loại', 'Ghi Chú', 'Đơn Giá (VNĐ/Giờ)', 'Học Phí Ca (VNĐ)'];
+      const rows = [headers];
+
+      scheduleItems.forEach((item, index) => {
+        const dur = calculateDurationHours(item.startTime, item.endTime);
+        const rate = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+        const tuition = item.isTrial ? 0 : Math.round(dur * rate);
+        rows.push([
+          index + 1,
+          DAY_NAMES[item.day],
+          item.startTime,
+          item.endTime,
+          dur.toFixed(2),
+          `"${item.student}"`,
+          `"${item.subject}"`,
+          `"${item.grade || ''}"`,
+          item.isTrial ? 'Học thử' : 'Chính thức',
+          `"${item.notes || ''}"`,
+          rate,
+          tuition
+        ]);
+      });
+
+      const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EduSchedule_ThoiKhoaBieu_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Đã tải xuống file CSV tiếng Việt chuẩn!');
+    }
+
+    // --- COPY TSV TO CLIPBOARD ---
+    function copyScheduleTsv() {
+      const headers = ['STT', 'Thứ', 'Bắt Đầu', 'Kết Thúc', 'Thời Lượng', 'Học Sinh', 'Môn Học', 'Khối', 'Ghi Chú', 'Đơn Giá', 'Thành Tiền'];
+      const rows = [headers];
+
+      scheduleItems.forEach((item, index) => {
+        const dur = calculateDurationHours(item.startTime, item.endTime);
+        const rate = item.hourlyRate !== undefined ? item.hourlyRate : 150000;
+        const tuition = item.isTrial ? 0 : Math.round(dur * rate);
+        rows.push([
+          index + 1,
+          DAY_NAMES[item.day],
+          item.startTime,
+          item.endTime,
+          dur.toFixed(2),
+          item.student,
+          item.subject,
+          item.grade || '',
+          item.notes || '',
+          rate,
+          tuition
+        ]);
+      });
+
+      const tsvContent = rows.map(r => r.join('\t')).join('\n');
+      navigator.clipboard.writeText(tsvContent).then(() => {
+        showToast('Đã sao chép bảng tính! Dán thẳng vào Excel / Google Sheets');
+      }).catch(() => {
+        showToast('Vui lòng cấp quyền sao chép!');
+      });
+    }
+
+    // --- DOWNLOAD SELF AS SINGLE HTML FILE ---
+    function downloadSelfHtml() {
+      // Serialize the whole current document HTML into a blob
+      const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'index.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Đã tải tệp index.html độc lập về máy của bạn!');
+    }
+
+    // --- TOAST NOTIFICATION ---
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 pointer-events-auto transition-all animate-modal';
+      toast.innerHTML = `
+        <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 200);
+      }, 3000);
+    }
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      renderHeaderAndSummary();
+      renderAllViews();
+    });
+  </script>
+</body>
+</html>
