@@ -236,7 +236,7 @@ export const ClassModal: React.FC<ClassModalProps> = ({
           <div>
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-              <span>{initialItem ? 'Chỉnh Sửa Buổi Học' : 'Thêm Buổi Học Mới Vào Lịch'}</span>
+              <span>{initialItem ? 'Cập Nhật Buổi Học' : 'Thêm Buổi Học Mới Vào Lịch'}</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Thời khóa biểu tuần dạy kèm · Tự động tính thời lượng, học phí & màu sắc
@@ -671,7 +671,7 @@ export const ClassModal: React.FC<ClassModalProps> = ({
               className="px-6 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-98 rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{initialItem ? 'Lưu Thay Đổi' : 'Thêm Vào Lịch Dạy'}</span>
+              <span>{initialItem ? 'Cập Nhật Buổi Học' : 'Thêm Vào Lịch Dạy'}</span>
             </button>
           </div>
 

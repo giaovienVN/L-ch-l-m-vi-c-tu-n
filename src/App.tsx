@@ -172,7 +172,7 @@ export default function App() {
 
     // Reset color filter so the new item is NEVER hidden by an active filter
     setSelectedColorKey(null);
-    const actionText = editingItem ? 'Đã lưu thay đổi buổi học' : `Đã thêm ca dạy mới cho ${item.student} (${item.day})`;
+    const actionText = editingItem ? `Đã cập nhật lịch học của ${item.student} (${item.day})` : `Đã thêm ca dạy mới cho ${item.student} (${item.day})`;
     const trialNote = item.isTrial ? ' [Lớp học thử 0₫]' : '';
     showToast(`${actionText}${trialNote}`);
   };
