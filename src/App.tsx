@@ -14,12 +14,14 @@ import { ClassModal } from './components/ClassModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
 import { TodayScheduleModal } from './components/TodayScheduleModal';
+import { ImportModal } from './components/ImportModal';
 import {
   RotateCcw,
   CheckCircle2,
   Undo2,
   Plus,
   Calendar,
+  FileUp,
 } from 'lucide-react';
 
 const STORAGE_KEY = 'eduschedule_items_v3';
@@ -73,6 +75,9 @@ export default function App() {
   
   // Reset confirm modal state (replaces window.confirm)
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+  // Import / Update schedule from CSV/Excel modal state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Undo delete support
   const [lastDeletedItem, setLastDeletedItem] = useState<ScheduleItem | null>(null);
@@ -190,6 +195,43 @@ export default function App() {
     showToast('Đã khôi phục thời khóa biểu gốc 21 ca học mẫu');
   };
 
+  // Import / Update schedule from CSV/Excel
+  const handleImportSchedule = (newItems: ScheduleItem[], replaceAll: boolean) => {
+    if (replaceAll) {
+      setItems(newItems);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
+      } catch {
+        // ignore
+      }
+      showToast(`Đã xoá lịch cũ và cập nhật thành công ${newItems.length} ca học mới vào thời khóa biểu!`);
+    } else {
+      setItems((prev) => {
+        const merged = [...prev, ...newItems];
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        } catch {
+          // ignore
+        }
+        return merged;
+      });
+      showToast(`Đã bổ sung thành công ${newItems.length} ca học mới vào thời khóa biểu!`);
+    }
+    setSelectedColorKey(null);
+  };
+
+  // Clear all schedule (Clean Slate)
+  const handleClearAllSchedule = () => {
+    setItems([]);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    } catch {
+      // ignore
+    }
+    setSelectedColorKey(null);
+    showToast('Đã xoá sạch toàn bộ lịch cũ (Bảng trắng)');
+  };
+
   // Export handlers
   const handleExportExcel = async () => {
     try {
@@ -246,6 +288,7 @@ export default function App() {
         onCopyTsv={handleCopyTsv}
         onOpenAddModal={() => handleOpenAddModal('T2')}
         onOpenTodayModal={() => setIsTodayModalOpen(true)}
+        onOpenImportModal={() => setIsImportModalOpen(true)}
         todayClassesCount={todayClassesCount}
         copied={copied}
         totalClasses={items.length}
@@ -304,6 +347,17 @@ export default function App() {
                 <span className="font-bold text-slate-900">{totalHours.toFixed(1)}h</span>
               </div>
             </div>
+
+            {/* Import / Update schedule button */}
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              className="px-3 py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              title="Cập nhật hoặc nạp lịch mới từ file CSV/Excel (Xoá lịch cũ & thay bằng lịch mới)"
+            >
+              <FileUp className="w-3.5 h-3.5 text-amber-700" />
+              <span>Cập Nhật / Nhập Lịch</span>
+            </button>
 
             {/* Prominent Add Button in Hero */}
             <button
@@ -435,7 +489,16 @@ export default function App() {
         onConfirm={handleConfirmReset}
       />
 
-      {/* 10. Toast Notification with Undo Support */}
+      {/* 10. Import / Update Schedule Modal (CSV / Excel) */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportSchedule}
+        onClearAll={handleClearAllSchedule}
+        currentItemsCount={items.length}
+      />
+
+      {/* 11. Toast Notification with Undo Support */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-800 text-xs font-medium animate-in fade-in slide-in-from-bottom-3 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />

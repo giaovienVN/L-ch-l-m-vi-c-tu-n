@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, FileSpreadsheet, Plus, Table, Calendar, BarChart3, Copy, Check, Printer, Clock } from 'lucide-react';
+import { Download, FileSpreadsheet, Plus, Table, Calendar, BarChart3, Copy, Check, Printer, Clock, FileUp } from 'lucide-react';
 import { ViewMode } from '../types/schedule';
 
 interface HeaderBarProps {
@@ -10,6 +10,7 @@ interface HeaderBarProps {
   onCopyTsv: () => void;
   onOpenAddModal: () => void;
   onOpenTodayModal?: () => void;
+  onOpenImportModal?: () => void;
   todayClassesCount?: number;
   copied: boolean;
   totalClasses: number;
@@ -24,6 +25,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onCopyTsv,
   onOpenAddModal,
   onOpenTodayModal,
+  onOpenImportModal,
   todayClassesCount,
   copied,
   totalClasses,
@@ -149,6 +151,19 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               <Printer className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden xl:inline">In / PDF</span>
             </button>
+
+            {/* Import CSV / Excel button */}
+            {onOpenImportModal && (
+              <button
+                type="button"
+                onClick={onOpenImportModal}
+                title="Nhập lịch từ tệp CSV hoặc Excel (Xoá lịch cũ và thay bằng lịch mới)"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg shadow-xs transition-colors cursor-pointer"
+              >
+                <FileUp className="w-3.5 h-3.5 text-amber-700" />
+                <span>Nhập Lịch (CSV)</span>
+              </button>
+            )}
 
             {/* Export CSV button */}
             <button
