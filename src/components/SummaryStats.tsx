@@ -20,8 +20,11 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
       colorKey: string;
       sessions: number;
       hours: number;
+      paidHours: number;
+      trialSessions: number;
       days: string[];
       hourlyRate: number;
+      isTrial?: boolean;
     }
   > = {};
 
@@ -37,12 +40,20 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
         colorKey: it.colorKey,
         sessions: 0,
         hours: 0,
+        paidHours: 0,
+        trialSessions: 0,
         days: [],
-        hourlyRate: it.hourlyRate || getStandardHourlyRate(it.student),
+        hourlyRate: it.isTrial ? 0 : (it.hourlyRate || getStandardHourlyRate(it.student)),
+        isTrial: !!it.isTrial,
       };
     }
     studentMap[key].sessions += 1;
     studentMap[key].hours += dur;
+    if (it.isTrial) {
+      studentMap[key].trialSessions += 1;
+    } else {
+      studentMap[key].paidHours += dur;
+    }
     if (!studentMap[key].days.includes(it.day)) {
       studentMap[key].days.push(it.day);
     }
@@ -52,13 +63,14 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
 
   // Overall metrics
   const totalSessions = items.length;
+  const totalTrialSessions = items.filter((i) => i.isTrial).length;
   const totalHours = items.reduce(
     (sum, it) => sum + calculateDurationHours(it.startTime, it.endTime),
     0
   );
   const uniqueStudents = Array.from(new Set(items.map((i) => i.student)));
   const totalTuition = studentBreakdown.reduce(
-    (sum, st) => sum + st.hours * st.hourlyRate,
+    (sum, st) => sum + st.paidHours * st.hourlyRate,
     0
   );
 
@@ -87,7 +99,13 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
             <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 mt-0.5">
               {totalSessions} <span className="text-xs font-normal text-slate-500">buổi</span>
             </div>
-            <span className="text-[11px] text-slate-400 mt-1 block">Trung bình 3 ca / ngày</span>
+            {totalTrialSessions > 0 ? (
+              <span className="text-[11px] text-amber-700 font-semibold mt-1 block">
+                ⭐ Gồm {totalTrialSessions} ca học thử (0₫)
+              </span>
+            ) : (
+              <span className="text-[11px] text-slate-400 mt-1 block">Trung bình ~{(totalSessions / 7).toFixed(1)} ca / ngày</span>
+            )}
           </div>
         </div>
 
@@ -227,7 +245,8 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
                   badgeText: 'text-slate-700',
                   accentHex: '#64748B',
                 };
-                const weekCost = st.hours * st.hourlyRate;
+                const isTrialOnly = st.isTrial || (st.sessions === st.trialSessions);
+                const weekCost = isTrialOnly ? 0 : st.paidHours * st.hourlyRate;
 
                 return (
                   <tr key={`${st.student}-${st.fullSubject}`} className="hover:bg-slate-50 transition-colors">
@@ -241,6 +260,11 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
                           style={{ backgroundColor: color.accentHex }}
                         />
                         <span>{st.student}</span>
+                        {isTrialOnly && (
+                          <span className="px-1.5 py-0.2 rounded-xs text-[9px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300">
+                            Học thử
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -269,21 +293,25 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ items, onUpdateRate 
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <input
-                          type="number"
-                          step="10000"
-                          value={st.hourlyRate}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (!isNaN(val) && val >= 0) {
-                              onUpdateRate(st.student, st.fullSubject, val);
-                            }
-                          }}
-                          className="w-28 px-2 py-1 text-right font-mono tabular-nums bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-slate-900 focus:bg-white"
-                        />
-                        <span className="text-slate-400 text-[10px]">₫</span>
-                      </div>
+                      {isTrialOnly ? (
+                        <span className="text-amber-800 font-bold text-xs">0₫ (Miễn phí)</span>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          <input
+                            type="number"
+                            step="10000"
+                            value={st.hourlyRate}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              if (!isNaN(val) && val >= 0) {
+                                onUpdateRate(st.student, st.fullSubject, val);
+                              }
+                            }}
+                            className="w-28 px-2 py-1 text-right font-mono tabular-nums bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-slate-900 focus:bg-white"
+                          />
+                          <span className="text-slate-400 text-[10px]">₫</span>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-emerald-800 text-sm">
                       {formatVND(weekCost)}

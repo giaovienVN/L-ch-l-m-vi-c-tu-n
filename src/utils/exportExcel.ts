@@ -90,8 +90,9 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
         const hexText = colorConfig ? 'FF' + colorConfig.hexText : 'FF0F172A';
         const hexBorder = colorConfig ? 'FF' + colorConfig.hexBorder : 'FFCBD5E1';
 
+        const trialTag = classItem.isTrial ? ' [⭐ Học thử 0₫]' : '';
         const noteText = classItem.notes ? ` (${classItem.notes})` : '';
-        cell.value = `⏰ ${classItem.startTime} – ${classItem.endTime} (${duration}h)\n👤 ${classItem.student}\n📚 ${classItem.fullSubject}${noteText}`;
+        cell.value = `⏰ ${classItem.startTime} – ${classItem.endTime} (${duration}h)${trialTag}\n👤 ${classItem.student}\n📚 ${classItem.fullSubject}${noteText}`;
         cell.font = { name: 'Arial', size: 9.5, bold: false, color: { argb: hexText } };
         cell.fill = {
           type: 'pattern',
@@ -230,8 +231,9 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
     const rowNum = 4 + index;
     const duration = calculateDurationHours(item.startTime, item.endTime);
     const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
-    const rate = item.hourlyRate || getStandardHourlyRate(item.student);
-    const totalAmount = duration * rate;
+    const rate = item.isTrial ? 0 : (item.hourlyRate !== undefined ? item.hourlyRate : getStandardHourlyRate(item.student));
+    const totalAmount = item.isTrial ? 0 : duration * rate;
+    const notesText = item.isTrial ? (item.notes ? `${item.notes} (Học thử 0₫)` : 'Học thử (0₫)') : (item.notes || '—');
     const colorObj = SUBJECT_COLORS[item.colorKey];
 
     const row = tableSheet.getRow(rowNum);
@@ -245,7 +247,7 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
       item.subject,
       item.grade,
       item.fullSubject,
-      item.notes || '—',
+      notesText,
       rate,
       totalAmount,
     ];
@@ -395,7 +397,8 @@ export async function exportScheduleToExcel(items: ScheduleItem[], filename = 'E
   sortedItems.forEach((it) => {
     const key = `${it.student} - ${it.fullSubject}`;
     const dur = calculateDurationHours(it.startTime, it.endTime);
-    const cost = dur * (it.hourlyRate || getStandardHourlyRate(it.student));
+    const rate = it.isTrial ? 0 : (it.hourlyRate !== undefined ? it.hourlyRate : getStandardHourlyRate(it.student));
+    const cost = dur * rate;
 
     if (!studentMap[key]) {
       studentMap[key] = {

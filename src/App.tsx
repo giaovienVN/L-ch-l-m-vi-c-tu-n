@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { INITIAL_SCHEDULE_ITEMS, calculateDurationHours, getStandardHourlyRate } from './data/initialSchedule';
 import { DayOfWeek, ScheduleItem, ViewMode } from './types/schedule';
 import { exportScheduleToExcel } from './utils/exportExcel';
 import { exportScheduleToCsv, copyScheduleToClipboardTsv } from './utils/exportCsv';
+import { shiftWeeks, getDayOfWeekId } from './utils/dateUtils';
 import { HeaderBar } from './components/HeaderBar';
 import { LegendBar } from './components/LegendBar';
 import { WeeklyGridView } from './components/WeeklyGridView';
@@ -12,28 +13,33 @@ import { SummaryStats } from './components/SummaryStats';
 import { ClassModal } from './components/ClassModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
+import { TodayScheduleModal } from './components/TodayScheduleModal';
 import {
   RotateCcw,
   CheckCircle2,
   Undo2,
   Plus,
+  Calendar,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'eduschedule_items_v2';
+const STORAGE_KEY = 'eduschedule_items_v3';
 
 export default function App() {
   const [items, setItems] = useState<ScheduleItem[]>(() => {
     try {
-      const saved = localStorage.getItem('eduschedule_items_v2') || localStorage.getItem('eduschedule_items_v1');
+      const saved = localStorage.getItem('eduschedule_items_v3') || localStorage.getItem('eduschedule_items_v2');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((item: ScheduleItem) => {
             const studentName = (item.student === 'Lâm' || item.student === 'Hoàng Lâm') ? 'Hoàng Lâm' : item.student;
+            const isTrial = !!item.isTrial;
             return {
               ...item,
               student: studentName,
-              hourlyRate: getStandardHourlyRate(studentName),
+              isTrial,
+              hourlyRate: isTrial ? 0 : (item.hourlyRate !== undefined ? item.hourlyRate : getStandardHourlyRate(studentName)),
+              colorKey: isTrial ? (item.colorKey || 'trial_free') : item.colorKey,
             };
           });
         }
@@ -46,6 +52,14 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<ViewMode>('grid');
   const [selectedColorKey, setSelectedColorKey] = useState<string | null>(null);
+
+  // Week navigation state (Tự động đổi khi qua tuần & hỗ trợ chuyển tuần)
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+  const referenceDate = useMemo(() => shiftWeeks(new Date(), weekOffset), [weekOffset]);
+  const isCurrentWeek = weekOffset === 0;
+
+  // Lập tức hiện thông báo lịch ngày hôm đó mỗi khi truy cập
+  const [isTodayModalOpen, setIsTodayModalOpen] = useState(true);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +81,10 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Today's classes count for badge in HeaderBar
+  const todayDayId = getDayOfWeekId(new Date());
+  const todayClassesCount = items.filter((i) => i.day === todayDayId).length;
+
   // Persist changes to localStorage safely
   useEffect(() => {
     try {
@@ -82,6 +100,11 @@ export default function App() {
       setToastMessage(null);
     }, 4000);
   };
+
+  // Week navigation handlers
+  const handlePrevWeek = () => setWeekOffset((prev) => prev - 1);
+  const handleNextWeek = () => setWeekOffset((prev) => prev + 1);
+  const handleCurrentWeek = () => setWeekOffset(0);
 
   // Open add modal with optional day & default time
   const handleOpenAddModal = (day: DayOfWeek = 'T2', defaultTime?: string) => {
@@ -149,10 +172,12 @@ export default function App() {
 
     // Reset color filter so the new item is NEVER hidden by an active filter
     setSelectedColorKey(null);
-    showToast(editingItem ? 'Đã lưu thay đổi buổi học' : `Đã thêm ca dạy mới cho ${item.student} (${item.day})`);
+    const actionText = editingItem ? 'Đã lưu thay đổi buổi học' : `Đã thêm ca dạy mới cho ${item.student} (${item.day})`;
+    const trialNote = item.isTrial ? ' [Lớp học thử 0₫]' : '';
+    showToast(`${actionText}${trialNote}`);
   };
 
-  // Reset to default 21 items
+  // Reset to default items
   const handleConfirmReset = () => {
     setItems(INITIAL_SCHEDULE_ITEMS);
     try {
@@ -220,6 +245,8 @@ export default function App() {
         onExportCsv={handleExportCsv}
         onCopyTsv={handleCopyTsv}
         onOpenAddModal={() => handleOpenAddModal('T2')}
+        onOpenTodayModal={() => setIsTodayModalOpen(true)}
+        todayClassesCount={todayClassesCount}
         copied={copied}
         totalClasses={items.length}
         totalHours={totalHours}
@@ -232,7 +259,7 @@ export default function App() {
         onSelectColorKey={setSelectedColorKey}
       />
 
-      {/* 3. Hero Section / Breadcrumb & Quick Action Controls */}
+      {/* 3. Hero Section / Quick Action Controls */}
       <section className="bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -247,12 +274,25 @@ export default function App() {
               Lịch Dạy Kèm Tuần & Bảng Phân Bổ Ca Học
             </h1>
             <p className="text-xs text-slate-600 mt-1 max-w-3xl">
-              Thời khóa biểu chuyên nghiệp 7 ngày trong tuần (Thứ 2 – Chủ Nhật), tự động phối màu theo cặp [Học sinh + Môn], tính thời lượng chính xác và xuất file Excel nhiều trang.
+              Thời khóa biểu chuyên nghiệp 7 ngày trong tuần, tự động phối màu theo cặp [Học sinh + Môn], tính thời lượng chính xác, hiển thị ngày tháng tuần hiện tại và xuất file Excel nhiều trang.
             </p>
           </div>
 
-          {/* Quick Stat Pill, Add Class Button & Reset Option */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Stat Pill, Today Schedule Button, Add Class Button & Reset Option */}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Quick button to view today's schedule modal */}
+            <button
+              type="button"
+              onClick={() => setIsTodayModalOpen(true)}
+              className="px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Xem lịch hôm nay</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-indigo-600 text-white text-[10px] font-bold">
+                {todayClassesCount} ca
+              </span>
+            </button>
+
             <div className="flex items-center gap-3 bg-slate-100 px-3.5 py-2 rounded-xl text-xs font-mono text-slate-700">
               <div>
                 <span className="text-slate-400 block text-[10px]">TỔNG CA:</span>
@@ -295,6 +335,11 @@ export default function App() {
           <WeeklyGridView
             items={items}
             selectedColorKey={selectedColorKey}
+            referenceDate={referenceDate}
+            onPrevWeek={handlePrevWeek}
+            onNextWeek={handleNextWeek}
+            onCurrentWeek={handleCurrentWeek}
+            isCurrentWeek={isCurrentWeek}
             onEditItem={handleEditItem}
             onDeleteItem={handleRequestDelete}
             onDuplicateItem={handleDuplicateItem}
@@ -307,6 +352,11 @@ export default function App() {
           <WeeklyTimelineChart
             items={items}
             selectedColorKey={selectedColorKey}
+            referenceDate={referenceDate}
+            onPrevWeek={handlePrevWeek}
+            onNextWeek={handleNextWeek}
+            onCurrentWeek={handleCurrentWeek}
+            isCurrentWeek={isCurrentWeek}
             onEditItem={handleEditItem}
             onDeleteItem={handleRequestDelete}
             onDuplicateItem={handleDuplicateItem}
@@ -317,6 +367,7 @@ export default function App() {
         {currentView === 'table' && (
           <DataTableView
             items={items}
+            referenceDate={referenceDate}
             onEditItem={handleEditItem}
             onDeleteItem={handleRequestDelete}
             onDuplicateItem={handleDuplicateItem}
@@ -347,7 +398,15 @@ export default function App() {
         </div>
       </footer>
 
-      {/* 6. Add/Edit Class Modal Dialog */}
+      {/* 6. Today's Schedule Modal (Yêu cầu: Mỗi khi truy cập, lập tức hiện thông báo lịch ngày hôm đó) */}
+      <TodayScheduleModal
+        isOpen={isTodayModalOpen}
+        onClose={() => setIsTodayModalOpen(false)}
+        items={items}
+        onSelectClass={handleEditItem}
+      />
+
+      {/* 7. Add/Edit Class Modal Dialog */}
       <ClassModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -358,7 +417,7 @@ export default function App() {
         allItems={items}
       />
 
-      {/* 7. Delete Confirmation Modal (In-app, avoids window.confirm blocking in iframe) */}
+      {/* 8. Delete Confirmation Modal (In-app, avoids window.confirm blocking in iframe) */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         item={deletingItem}
@@ -369,14 +428,14 @@ export default function App() {
         onConfirm={handleConfirmDelete}
       />
 
-      {/* 8. Reset Data Confirmation Modal (In-app, avoids window.confirm blocking in iframe) */}
+      {/* 9. Reset Data Confirmation Modal (In-app, avoids window.confirm blocking in iframe) */}
       <ResetConfirmModal
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
         onConfirm={handleConfirmReset}
       />
 
-      {/* 9. Toast Notification with Undo Support */}
+      {/* 10. Toast Notification with Undo Support */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-800 text-xs font-medium animate-in fade-in slide-in-from-bottom-3 duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -385,7 +444,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleUndoDelete}
-              className="ml-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-md font-semibold text-xs flex items-center gap-1 transition-colors"
+              className="ml-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-md font-semibold text-xs flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Undo2 className="w-3 h-3" />
               <span>Hoàn tác</span>

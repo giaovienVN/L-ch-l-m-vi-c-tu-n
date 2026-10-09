@@ -20,7 +20,8 @@ export const LegendBar: React.FC<LegendBarProps> = ({
     counts[it.colorKey] = (counts[it.colorKey] || 0) + 1;
   });
 
-  const colorEntries = Object.entries(SUBJECT_COLORS);
+  // Only show colors that actually have active sessions on the schedule
+  const activeColorEntries = Object.entries(SUBJECT_COLORS).filter(([key]) => (counts[key] || 0) > 0);
 
   return (
     <div className="bg-white border-b border-slate-200 py-2.5 px-4 sm:px-6 lg:px-8">
@@ -49,7 +50,7 @@ export const LegendBar: React.FC<LegendBarProps> = ({
             </button>
           )}
 
-          {colorEntries.map(([key, color]) => {
+          {activeColorEntries.map(([key, color]) => {
             const count = counts[key] || 0;
             const isSelected = selectedColorKey === key;
             const isDimmed = selectedColorKey && !isSelected;

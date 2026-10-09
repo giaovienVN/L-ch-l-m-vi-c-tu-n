@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND } from '../data/initialSchedule';
 import { DayOfWeek, ScheduleItem } from '../types/schedule';
-import { Clock, User, BookOpen, Edit2, Copy, Trash2, Plus, ZoomIn, ZoomOut, Info } from 'lucide-react';
+import { getWeekDates, getWeekRangeString } from '../utils/dateUtils';
+import { Clock, User, BookOpen, Edit2, Copy, Trash2, Plus, Star, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface WeeklyTimelineChartProps {
   items: ScheduleItem[];
   selectedColorKey: string | null;
+  referenceDate?: Date;
+  onPrevWeek?: () => void;
+  onNextWeek?: () => void;
+  onCurrentWeek?: () => void;
+  isCurrentWeek?: boolean;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (item: ScheduleItem) => void;
   onDuplicateItem: (item: ScheduleItem) => void;
@@ -15,17 +21,21 @@ interface WeeklyTimelineChartProps {
 const START_HOUR = 6;  // 06:00
 const END_HOUR = 23;   // 23:00
 const TOTAL_HOURS = END_HOUR - START_HOUR; // 17 hours
-const TOTAL_MINUTES = TOTAL_HOURS * 60;    // 1020 minutes
 
 export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
   items,
   selectedColorKey,
+  referenceDate = new Date(),
+  onPrevWeek,
+  onNextWeek,
+  onCurrentWeek,
+  isCurrentWeek = true,
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
   onAddNewToDay,
 }) => {
-  // Density mode: 'compact' (38px/hr, total ~646px) or 'comfortable' (52px/hr, total ~884px)
+  // Density mode: 'compact' (38px/hr) or 'comfortable' (52px/hr)
   const [density, setDensity] = useState<'compact' | 'comfortable'>('compact');
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
@@ -45,30 +55,80 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
   };
 
   const hoursList = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => START_HOUR + i);
+  const weekDates = getWeekDates(referenceDate);
+  const weekRangeText = getWeekRangeString(referenceDate);
 
   return (
     <div className="space-y-3">
-      
-      {/* Chart Control Toolbar */}
+
+      {/* Week Navigation & Chart Toolbar */}
       <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-bold text-slate-800">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-            <span>Biểu đồ thời gian tuần (Timeline 06:00 – 23:00)</span>
+        {/* Week navigation */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+            {onPrevWeek && (
+              <button
+                type="button"
+                onClick={onPrevWeek}
+                title="Xem tuần trước"
+                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md transition-all cursor-pointer shadow-2xs"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            {onCurrentWeek && (
+              <button
+                type="button"
+                onClick={onCurrentWeek}
+                className={`px-2.5 py-1 text-xs rounded-md transition-all font-semibold cursor-pointer ${
+                  isCurrentWeek
+                    ? 'bg-white text-slate-900 shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                Tuần hiện tại
+              </button>
+            )}
+            {onNextWeek && (
+              <button
+                type="button"
+                onClick={onNextWeek}
+                title="Xem tuần tiếp theo"
+                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md transition-all cursor-pointer shadow-2xs"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          <span className="text-slate-400 hidden md:inline">·</span>
-          <span className="text-slate-500 hidden md:inline">
-            Khung giờ theo tỷ lệ thực · Nhìn rõ khoảng trống & phân bổ lịch dạy
-          </span>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="text-xs font-bold text-slate-900 font-mono">
+              Tuần: {weekRangeText}
+            </span>
+            {isCurrentWeek ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                Đang xem tuần này
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onCurrentWeek}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300 hover:bg-amber-200 cursor-pointer transition-colors"
+              >
+                Quay lại tuần này
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Density switcher and hint */}
+        {/* Density switcher */}
         <div className="flex items-center gap-2">
           <span className="text-slate-500 font-medium text-[11px]">Chế độ xem:</span>
           <div className="flex items-center p-0.5 bg-slate-100 rounded-lg text-slate-600 font-medium">
             <button
               onClick={() => setDensity('compact')}
-              className={`px-2.5 py-1 rounded-md transition-all text-xs ${
+              className={`px-2.5 py-1 rounded-md transition-all text-xs cursor-pointer ${
                 density === 'compact'
                   ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'hover:text-slate-900'
@@ -78,7 +138,7 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
             </button>
             <button
               onClick={() => setDensity('comfortable')}
-              className={`px-2.5 py-1 rounded-md transition-all text-xs ${
+              className={`px-2.5 py-1 rounded-md transition-all text-xs cursor-pointer ${
                 density === 'comfortable'
                   ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'hover:text-slate-900'
@@ -100,8 +160,9 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
             Giờ
           </div>
 
-          {/* 7 Days Headers */}
+          {/* 7 Days Headers with Dates */}
           {DAYS_OF_WEEK.map((d) => {
+            const dateInfo = weekDates.find((w) => w.dayId === d.id);
             const dayClasses = filteredItems.filter((i) => i.day === d.id);
             const totalHours = dayClasses.reduce(
               (sum, it) => sum + calculateDurationHours(it.startTime, it.endTime),
@@ -112,15 +173,24 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
             return (
               <div
                 key={d.id}
-                className={`p-2.5 text-center border-r last:border-r-0 border-slate-200 flex flex-col items-center justify-center ${
-                  isWeekend ? 'bg-amber-50/60 text-amber-950' : 'text-slate-900'
+                className={`p-2 text-center border-r last:border-r-0 border-slate-200 flex flex-col items-center justify-center ${
+                  dateInfo?.isToday
+                    ? 'bg-emerald-50 text-emerald-950 font-bold'
+                    : isWeekend
+                    ? 'bg-amber-50/60 text-amber-950'
+                    : 'text-slate-900'
                 }`}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap justify-center">
                   <span className="font-bold text-xs">{d.name}</span>
-                  <span className="text-[10px] font-mono px-1 rounded-xs bg-white/80 border border-slate-200 text-slate-600 font-semibold">
-                    {d.shortName}
+                  <span className="text-[10px] font-mono px-1 rounded-xs bg-white/90 border border-slate-200 text-slate-800 font-bold">
+                    {dateInfo?.dateStr}
                   </span>
+                  {dateInfo?.isToday && (
+                    <span className="text-[9px] font-bold px-1.5 rounded-full bg-emerald-600 text-white animate-pulse">
+                      Hôm nay
+                    </span>
+                  )}
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5 font-mono">
                   <span>{dayClasses.length} ca</span>
@@ -151,7 +221,7 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
               ))}
             </div>
 
-            {/* 7 Days Column Tracks */}
+            {/* 7 Columns for Days */}
             {DAYS_OF_WEEK.map((d) => {
               const dayClasses = filteredItems.filter((i) => i.day === d.id);
               const isWeekend = d.id === 'T7' || d.id === 'CN';
@@ -159,47 +229,37 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
               return (
                 <div
                   key={d.id}
-                  onClick={(e) => {
-                    // Click on empty space in column to add class at that approximate hour
-                    if (e.target === e.currentTarget) {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const clickY = e.clientY - rect.top;
-                      const clickedHour = Math.floor(START_HOUR + clickY / hourHeight);
-                      const formattedTime = `${String(Math.min(22, Math.max(START_HOUR, clickedHour))).padStart(2, '0')}:00`;
-                      onAddNewToDay(d.id, formattedTime);
-                    }
-                  }}
-                  className={`relative border-r last:border-r-0 border-slate-200 transition-colors cursor-pointer group/col ${
-                    isWeekend ? 'bg-amber-50/15' : 'bg-white'
+                  className={`border-r last:border-r-0 border-slate-200 relative group/col ${
+                    isWeekend ? 'bg-amber-50/20' : 'bg-white'
                   }`}
                 >
-                  {/* Horizontal Hour Grid Guidelines */}
+                  {/* Horizontal Hour Grid Lines */}
                   {hoursList.map((h, idx) => (
                     <div
                       key={h}
-                      className="absolute w-full border-t border-slate-100 pointer-events-none"
-                      style={{ top: `${idx * hourHeight}px` }}
+                      onClick={() => {
+                        const timeStr = `${String(h).padStart(2, '0')}:00`;
+                        onAddNewToDay(d.id, timeStr);
+                      }}
+                      title={`Nhấp để thêm ca học lúc ${String(h).padStart(2, '0')}:00 (${d.name})`}
+                      className="absolute w-full border-b border-slate-100 hover:bg-slate-100/60 cursor-pointer transition-colors"
+                      style={{
+                        top: `${idx * hourHeight}px`,
+                        height: `${hourHeight}px`,
+                      }}
                     />
                   ))}
 
-                  {/* Half-hour subtle dotted line */}
-                  {hoursList.slice(0, -1).map((h, idx) => (
-                    <div
-                      key={`half-${h}`}
-                      className="absolute w-full border-t border-dashed border-slate-100/60 pointer-events-none"
-                      style={{ top: `${idx * hourHeight + hourHeight / 2}px` }}
-                    />
-                  ))}
-
-                  {/* Render Class Blocks */}
+                  {/* Render Class Block Items */}
                   {dayClasses.map((item) => {
-                    const startMins = getMinutesFromStart(item.startTime);
-                    const endMins = getMinutesFromStart(item.endTime);
-                    const durationMins = Math.max(30, endMins - startMins);
-                    const duration = calculateDurationHours(item.startTime, item.endTime);
+                    const startMin = getMinutesFromStart(item.startTime);
+                    const endMin = getMinutesFromStart(item.endTime);
+                    const durationMinutes = Math.max(30, endMin - startMin);
+                    const durationHours = calculateDurationHours(item.startTime, item.endTime);
 
-                    const topPx = (startMins / 60) * hourHeight;
-                    const heightPx = Math.max(30, (durationMins / 60) * hourHeight - 2);
+                    // Position in pixels
+                    const topPx = (startMin / 60) * hourHeight;
+                    const heightPx = Math.max(32, (durationMinutes / 60) * hourHeight);
 
                     const color = SUBJECT_COLORS[item.colorKey] || {
                       bgColor: 'bg-indigo-50',
@@ -220,46 +280,53 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
                         style={{
                           top: `${topPx}px`,
                           height: `${heightPx}px`,
-                          left: '3px',
-                          right: '3px',
                         }}
-                        className={`absolute rounded-lg border px-2 py-1 transition-all overflow-hidden flex flex-col justify-between shadow-2xs cursor-pointer z-10 ${
+                        className={`absolute left-1 right-1 rounded-lg border p-1.5 transition-all cursor-pointer shadow-xs overflow-hidden ${
                           color.bgColor
                         } ${color.borderColor} ${color.textColor} ${
-                          isHovered ? 'ring-2 ring-slate-900 ring-offset-1 z-30 shadow-md scale-101' : 'hover:shadow-xs'
+                          isHovered ? 'z-30 ring-2 ring-slate-900 shadow-md scale-[1.02]' : 'z-10'
                         }`}
-                        title={`${item.startTime} - ${item.endTime}: ${item.student} (${item.fullSubject})`}
                       >
-                        {/* Line 1: Concise Time & Duration */}
-                        <div className="flex items-center justify-between gap-1 text-[10px] font-mono leading-none">
-                          <span className="font-bold tabular-nums truncate">
-                            {item.startTime}–{item.endTime}
+                        {/* Time & Duration badge */}
+                        <div className="flex items-center justify-between text-[10px] font-mono leading-none mb-1">
+                          <span className="font-bold truncate">
+                            {item.startTime} – {item.endTime}
                           </span>
-                          <span className={`px-1 rounded-2xs font-extrabold text-[9px] ${color.badgeBg} ${color.badgeText} shrink-0`}>
-                            {duration}h
-                          </span>
+                          {item.isTrial ? (
+                            <span className="px-1 py-0.2 rounded-xs text-[9px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-0.5 shrink-0">
+                              <Star className="w-2 h-2 fill-amber-500 text-amber-500" />
+                              <span>Học thử</span>
+                            </span>
+                          ) : (
+                            <span className={`px-1 py-0.2 rounded-xs text-[9px] font-bold ${color.badgeBg} ${color.badgeText} shrink-0`}>
+                              {durationHours}h
+                            </span>
+                          )}
                         </div>
 
-                        {/* Line 2: Student Name & Subject (Concise & Bold) */}
-                        <div className="flex items-center gap-1 text-[11px] leading-tight font-bold truncate mt-0.5">
-                          <span className="truncate">{item.student}</span>
-                          <span className="text-[10px] opacity-75 font-normal">·</span>
-                          <span className="text-[10px] font-semibold opacity-90 truncate">{item.fullSubject}</span>
+                        {/* Student Name */}
+                        <div className="font-bold text-xs leading-tight truncate">
+                          {item.student}
                         </div>
 
-                        {/* Line 3: Actions (visible on hover) */}
+                        {/* Subject */}
+                        <div className="text-[10px] font-medium opacity-85 truncate mt-0.5">
+                          {item.fullSubject}
+                        </div>
+
+                        {/* Hover Quick Actions */}
                         {isHovered && (
-                          <div className="mt-1 pt-0.5 border-t border-black/10 flex items-center justify-end gap-1">
+                          <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-white/95 rounded-md p-0.5 shadow-xs border border-slate-200">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onEditItem(item);
                               }}
-                              title="Chỉnh sửa"
-                              className="p-1 bg-white/90 hover:bg-white text-slate-700 hover:text-indigo-600 rounded-xs shadow-2xs"
+                              title="Sửa"
+                              className="p-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-sm"
                             >
-                              <Edit2 className="w-2.5 h-2.5" />
+                              <Edit2 className="w-3 h-3" />
                             </button>
                             <button
                               type="button"
@@ -268,9 +335,9 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
                                 onDuplicateItem(item);
                               }}
                               title="Nhân bản"
-                              className="p-1 bg-white/90 hover:bg-white text-slate-700 hover:text-emerald-600 rounded-xs shadow-2xs"
+                              className="p-1 text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-sm"
                             >
-                              <Copy className="w-2.5 h-2.5" />
+                              <Copy className="w-3 h-3" />
                             </button>
                             <button
                               type="button"
@@ -279,9 +346,9 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
                                 onDeleteItem(item);
                               }}
                               title="Xoá"
-                              className="p-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xs shadow-2xs"
+                              className="p-1 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-sm"
                             >
-                              <Trash2 className="w-2.5 h-2.5" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                         )}
@@ -295,25 +362,6 @@ export const WeeklyTimelineChart: React.FC<WeeklyTimelineChartProps> = ({
         </div>
 
       </div>
-
-      {/* Footer Info & Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 bg-white p-3 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-1.5">
-          <Info className="w-3.5 h-3.5 text-slate-400" />
-          <span>Mẹo: Bạn có thể click vào bất kỳ ô trống nào trên biểu đồ để tạo nhanh ca học tại khung giờ đó.</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-            <span>Khoảng trống = Khung giờ rảnh</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-            <span>Khối màu = Ca dạy có lịch</span>
-          </span>
-        </div>
-      </div>
-
     </div>
   );
 };

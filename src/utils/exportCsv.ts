@@ -29,8 +29,9 @@ export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedu
   const rows = sortedItems.map((item, index) => {
     const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
     const duration = calculateDurationHours(item.startTime, item.endTime);
-    const rate = item.hourlyRate || getStandardHourlyRate(item.student);
-    const total = duration * rate;
+    const rate = item.isTrial ? 0 : (item.hourlyRate !== undefined ? item.hourlyRate : getStandardHourlyRate(item.student));
+    const total = item.isTrial ? 0 : duration * rate;
+    const noteText = item.isTrial ? (item.notes ? `${item.notes} (Học thử 0₫)` : 'Học thử (0₫)') : (item.notes || '');
 
     return [
       index + 1,
@@ -42,7 +43,7 @@ export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedu
       `"${item.subject}"`,
       `"${item.grade}"`,
       `"${item.fullSubject}"`,
-      `"${item.notes || ''}"`,
+      `"${noteText}"`,
       rate,
       total,
     ].join(',');
@@ -54,8 +55,10 @@ export function exportScheduleToCsv(items: ScheduleItem[], filename = 'EduSchedu
     0
   );
   const totalTuition = sortedItems.reduce(
-    (sum, item) =>
-      sum + calculateDurationHours(item.startTime, item.endTime) * (item.hourlyRate || getStandardHourlyRate(item.student)),
+    (sum, item) => {
+      if (item.isTrial) return sum;
+      return sum + calculateDurationHours(item.startTime, item.endTime) * (item.hourlyRate || getStandardHourlyRate(item.student));
+    },
     0
   );
 
@@ -108,8 +111,9 @@ export function copyScheduleToClipboardTsv(items: ScheduleItem[]): boolean {
   const rows = sortedItems.map((item, index) => {
     const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
     const duration = calculateDurationHours(item.startTime, item.endTime);
-    const rate = item.hourlyRate || 220000;
-    const total = duration * rate;
+    const rate = item.isTrial ? 0 : (item.hourlyRate !== undefined ? item.hourlyRate : getStandardHourlyRate(item.student));
+    const total = item.isTrial ? 0 : duration * rate;
+    const noteText = item.isTrial ? (item.notes ? `${item.notes} (Học thử 0₫)` : 'Học thử (0₫)') : (item.notes || '');
 
     return [
       index + 1,
@@ -121,7 +125,7 @@ export function copyScheduleToClipboardTsv(items: ScheduleItem[]): boolean {
       item.subject,
       item.grade,
       item.fullSubject,
-      item.notes || '',
+      noteText,
       rate,
       total,
     ].join('\t');

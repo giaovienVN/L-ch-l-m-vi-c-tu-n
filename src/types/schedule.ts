@@ -35,8 +35,9 @@ export interface ScheduleItem {
   grade: string;     // "10"
   fullSubject: string; // "Toán 10"
   notes?: string;    // "Học bù", "Scratch 2", etc.
-  hourlyRate?: number; // e.g., 250000 VND
+  hourlyRate?: number; // e.g., 150000 VND
   colorKey: string;   // key into color dictionary
+  isTrial?: boolean;  // Lớp học thử / Demo miễn phí (0đ)
 }
 
 export interface StudentSummary {

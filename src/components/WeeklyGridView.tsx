@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND, getStandardHourlyRate } from '../data/initialSchedule';
 import { DayOfWeek, ScheduleItem } from '../types/schedule';
-import { Clock, User, BookOpen, AlertCircle, Edit2, Copy, Trash2, Plus } from 'lucide-react';
+import { getWeekDates, getWeekRangeString } from '../utils/dateUtils';
+import { Clock, User, BookOpen, AlertCircle, Edit2, Copy, Trash2, Plus, Star, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface WeeklyGridViewProps {
   items: ScheduleItem[];
   selectedColorKey: string | null;
+  referenceDate?: Date;
+  onPrevWeek?: () => void;
+  onNextWeek?: () => void;
+  onCurrentWeek?: () => void;
+  isCurrentWeek?: boolean;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (item: ScheduleItem) => void;
   onDuplicateItem: (item: ScheduleItem) => void;
@@ -16,6 +22,11 @@ interface WeeklyGridViewProps {
 export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
   items,
   selectedColorKey,
+  referenceDate = new Date(),
+  onPrevWeek,
+  onNextWeek,
+  onCurrentWeek,
+  isCurrentWeek = true,
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
@@ -36,8 +47,12 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
     return true;
   });
 
+  const weekDates = getWeekDates(referenceDate);
+  const weekRangeText = getWeekRangeString(referenceDate);
+
   // Calculate day metrics
   const dayStats = DAYS_OF_WEEK.map((day) => {
+    const dateInfo = weekDates.find((w) => w.dayId === day.id);
     const dayClasses = filteredItems
       .filter((it) => it.day === day.id)
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -61,6 +76,7 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
 
     return {
       day,
+      dateInfo,
       classes: dayClasses,
       totalHours,
       conflicts,
@@ -69,47 +85,69 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Sub-toolbar: Quick Filter by Time of Day & Metric Pill */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-semibold">Lọc theo buổi:</span>
-          <div className="flex items-center p-0.5 bg-slate-100 rounded-lg text-slate-600 font-medium">
-            <button
-              onClick={() => setTimeFilter('all')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                timeFilter === 'all' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              Cả ngày
-            </button>
-            <button
-              onClick={() => setTimeFilter('morning')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                timeFilter === 'morning' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              Sáng (&lt;12h)
-            </button>
-            <button
-              onClick={() => setTimeFilter('afternoon')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                timeFilter === 'afternoon' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              Chiều (12h-18h)
-            </button>
-            <button
-              onClick={() => setTimeFilter('evening')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                timeFilter === 'evening' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
-              }`}
-            >
-              Tối (&gt;18h)
-            </button>
+
+      {/* Week Navigation & Date Range Bar (Yêu cầu: Thêm ngày tháng tuần hiện tại bên cạnh thứ, tự động đổi khi qua tuần) */}
+      <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+            {onPrevWeek && (
+              <button
+                type="button"
+                onClick={onPrevWeek}
+                title="Xem tuần trước"
+                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md transition-all cursor-pointer shadow-2xs"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            {onCurrentWeek && (
+              <button
+                type="button"
+                onClick={onCurrentWeek}
+                className={`px-2.5 py-1 text-xs rounded-md transition-all font-semibold cursor-pointer ${
+                  isCurrentWeek
+                    ? 'bg-white text-slate-900 shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                Tuần hiện tại
+              </button>
+            )}
+            {onNextWeek && (
+              <button
+                type="button"
+                onClick={onNextWeek}
+                title="Xem tuần tiếp theo"
+                className="p-1 text-slate-600 hover:text-slate-900 hover:bg-white rounded-md transition-all cursor-pointer shadow-2xs"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="text-xs font-bold text-slate-900 font-mono">
+              Tuần: {weekRangeText}
+            </span>
+            {isCurrentWeek ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                Đang xem tuần này
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onCurrentWeek}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300 hover:bg-amber-200 cursor-pointer transition-colors"
+              >
+                Quay lại tuần này
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-slate-500">
+        {/* View Switcher / Quick Stats */}
+        <div className="flex items-center gap-3 text-xs text-slate-500">
           {onSwitchToTimeline && (
             <button
               type="button"
@@ -120,6 +158,53 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
               <span>Xem dạng Biểu Đồ Tuần →</span>
             </button>
           )}
+          <span className="hidden md:inline">
+            Tổng cộng: <strong className="text-slate-900 font-mono">{filteredItems.length} ca</strong> ({filteredItems.reduce((acc, it) => acc + calculateDurationHours(it.startTime, it.endTime), 0).toFixed(1)}h)
+          </span>
+        </div>
+      </div>
+
+      {/* Sub-toolbar: Quick Filter by Time of Day & Metric Pill */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 font-semibold">Lọc theo buổi:</span>
+          <div className="flex items-center p-0.5 bg-slate-100 rounded-lg text-slate-600 font-medium">
+            <button
+              onClick={() => setTimeFilter('all')}
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
+                timeFilter === 'all' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+              }`}
+            >
+              Cả ngày
+            </button>
+            <button
+              onClick={() => setTimeFilter('morning')}
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
+                timeFilter === 'morning' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+              }`}
+            >
+              Sáng (&lt;12h)
+            </button>
+            <button
+              onClick={() => setTimeFilter('afternoon')}
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
+                timeFilter === 'afternoon' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+              }`}
+            >
+              Chiều (12h-18h)
+            </button>
+            <button
+              onClick={() => setTimeFilter('evening')}
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
+                timeFilter === 'evening' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+              }`}
+            >
+              Tối (&gt;18h)
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-slate-500">
           <span>
             Đang hiển thị:{' '}
             <strong className="text-slate-900 font-mono tabular-nums">{filteredItems.length}</strong> buổi học
@@ -137,32 +222,43 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
         </div>
       </div>
 
-      {/* Weekly Grid (7 Columns) */}
+      {/* Weekly Grid (7 Columns) with Day & Date clearly shown */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3.5 items-start">
-        {dayStats.map(({ day, classes, totalHours, conflicts }) => {
+        {dayStats.map(({ day, dateInfo, classes, totalHours, conflicts }) => {
           const isWeekend = day.id === 'T7' || day.id === 'CN';
 
           return (
             <div
               key={day.id}
               className={`flex flex-col rounded-xl border bg-white shadow-xs overflow-hidden transition-all ${
-                isWeekend ? 'border-amber-200/80 bg-amber-50/20' : 'border-slate-200'
+                dateInfo?.isToday
+                  ? 'ring-2 ring-emerald-500 border-emerald-400'
+                  : isWeekend
+                  ? 'border-amber-200/80 bg-amber-50/20'
+                  : 'border-slate-200'
               }`}
             >
-              {/* Day Header */}
+              {/* Day Header with Date beside Day */}
               <div
                 className={`p-3 border-b flex items-center justify-between ${
-                  isWeekend
+                  dateInfo?.isToday
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                    : isWeekend
                     ? 'bg-amber-100/60 border-amber-200 text-amber-950'
                     : 'bg-slate-100/80 border-slate-200 text-slate-900'
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-bold text-sm">{day.name}</span>
-                    <span className="text-[11px] font-mono px-1.5 py-0.2 rounded-sm bg-white/70 text-slate-700 border border-slate-200/60 font-semibold">
-                      {day.shortName}
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-md bg-white/90 text-slate-800 border border-slate-300 font-bold shadow-2xs">
+                      {dateInfo?.dateStr}
                     </span>
+                    {dateInfo?.isToday && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs animate-pulse">
+                        Hôm nay
+                      </span>
+                    )}
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
                     <span className="font-mono tabular-nums font-semibold text-slate-700">
@@ -179,8 +275,8 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onAddNewToDay(day.id)}
-                  title={`Thêm buổi dạy vào ${day.name}`}
-                  className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-slate-950 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs font-bold"
+                  title={`Thêm buổi dạy vào ${day.name} (${dateInfo?.dateStr})`}
+                  className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-slate-950 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs font-bold cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -220,7 +316,7 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                       };
 
                       const rate = item.hourlyRate || getStandardHourlyRate(item.student);
-                      const sessionTuition = duration * rate;
+                      const sessionTuition = item.isTrial ? 0 : duration * rate;
 
                       return (
                         <div
@@ -235,9 +331,17 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                                 {item.startTime} – {item.endTime}
                               </span>
                             </div>
-                            <span className={`px-1.5 py-0.2 rounded-sm text-[10px] font-extrabold ${color.badgeBg} ${color.badgeText}`}>
-                              {duration}h
-                            </span>
+                            <div className="flex items-center gap-1">
+                              {item.isTrial && (
+                                <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-0.5">
+                                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                                  <span>Học thử</span>
+                                </span>
+                              )}
+                              <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-extrabold ${color.badgeBg} ${color.badgeText}`}>
+                                {duration}h
+                              </span>
+                            </div>
                           </div>
 
                           {/* Student Name */}
@@ -264,8 +368,17 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
 
                           {/* Estimated fee footer */}
                           <div className="mt-2 pt-1 border-t border-black/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                            <span>{formatVND(rate)}/h</span>
-                            <span className="font-bold text-slate-800">{formatVND(sessionTuition)}</span>
+                            {item.isTrial ? (
+                              <span className="text-amber-800 font-bold flex items-center gap-1">
+                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                <span>Học thử miễn phí (0₫)</span>
+                              </span>
+                            ) : (
+                              <>
+                                <span>{formatVND(rate)}/h</span>
+                                <span className="font-bold text-slate-800">{formatVND(sessionTuition)}</span>
+                              </>
+                            )}
                           </div>
 
                           {/* Action buttons (Clean and easily clickable) */}
@@ -273,28 +386,26 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                             <button
                               type="button"
                               onClick={() => onEditItem(item)}
-                              title="Chỉnh sửa buổi học"
-                              className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 bg-white/80 hover:bg-white hover:text-indigo-600 rounded-md border border-black/10 transition-colors flex items-center gap-1"
+                              title="Chỉnh sửa ca học này"
+                              className="p-1 rounded-md text-slate-500 hover:text-slate-900 hover:bg-black/5 transition-colors cursor-pointer"
                             >
-                              <Edit2 className="w-2.5 h-2.5" />
-                              <span>Sửa</span>
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => onDuplicateItem(item)}
-                              title="Nhân bản buổi học"
-                              className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 bg-white/80 hover:bg-white hover:text-emerald-600 rounded-md border border-black/10 transition-colors flex items-center gap-1"
+                              title="Nhân bản ca học này"
+                              className="p-1 rounded-md text-slate-500 hover:text-emerald-700 hover:bg-black/5 transition-colors cursor-pointer"
                             >
-                              <Copy className="w-2.5 h-2.5" />
+                              <Copy className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => onDeleteItem(item)}
-                              title="Xoá buổi học"
-                              className="px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 bg-rose-50/80 hover:bg-rose-100 rounded-md border border-rose-200 transition-colors flex items-center gap-1"
+                              title="Xoá ca học này"
+                              className="p-1 rounded-md text-rose-500 hover:text-rose-700 hover:bg-rose-100/60 transition-colors cursor-pointer"
                             >
-                              <Trash2 className="w-2.5 h-2.5" />
-                              <span>Xoá</span>
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -303,14 +414,14 @@ export const WeeklyGridView: React.FC<WeeklyGridViewProps> = ({
                   )}
                 </div>
 
-                {/* Button to add class at the bottom of column */}
+                {/* Day Footer Add Action */}
                 <button
                   type="button"
                   onClick={() => onAddNewToDay(day.id)}
-                  className="w-full mt-2 py-2 px-3 border border-dashed border-slate-300 hover:border-slate-500 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  className="w-full mt-2 py-1.5 border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Thêm ca {day.shortName}</span>
+                  <span>Thêm ca {day.shortName}</span>
                 </button>
               </div>
             </div>

@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { DAYS_OF_WEEK, SUBJECT_COLORS, calculateDurationHours, formatVND, getStandardHourlyRate } from '../data/initialSchedule';
 import { ScheduleItem } from '../types/schedule';
-import { Search, ArrowUpDown, Edit2, Copy, Trash2, FileSpreadsheet, Download, Check, Plus } from 'lucide-react';
+import { getWeekDates } from '../utils/dateUtils';
+import { Search, ArrowUpDown, Edit2, Copy, Trash2, FileSpreadsheet, Download, Check, Plus, Star } from 'lucide-react';
 
 interface DataTableViewProps {
   items: ScheduleItem[];
+  referenceDate?: Date;
   onEditItem: (item: ScheduleItem) => void;
   onDeleteItem: (item: ScheduleItem) => void;
   onDuplicateItem: (item: ScheduleItem) => void;
@@ -17,6 +19,7 @@ interface DataTableViewProps {
 
 export const DataTableView: React.FC<DataTableViewProps> = ({
   items,
+  referenceDate = new Date(),
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
@@ -31,6 +34,8 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
   const [studentFilter, setStudentFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<'day' | 'time' | 'student' | 'duration' | 'tuition'>('day');
   const [sortAsc, setSortAsc] = useState<boolean>(true);
+
+  const weekDates = useMemo(() => getWeekDates(referenceDate), [referenceDate]);
 
   // Unique students list
   const uniqueStudents = useMemo(() => {
@@ -72,8 +77,8 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
         const durB = calculateDurationHours(b.startTime, b.endTime);
         comparison = durA - durB;
       } else if (sortField === 'tuition') {
-        const tA = calculateDurationHours(a.startTime, a.endTime) * (a.hourlyRate || getStandardHourlyRate(a.student));
-        const tB = calculateDurationHours(b.startTime, b.endTime) * (b.hourlyRate || getStandardHourlyRate(b.student));
+        const tA = a.isTrial ? 0 : calculateDurationHours(a.startTime, a.endTime) * (a.hourlyRate || getStandardHourlyRate(a.student));
+        const tB = b.isTrial ? 0 : calculateDurationHours(b.startTime, b.endTime) * (b.hourlyRate || getStandardHourlyRate(b.student));
         comparison = tA - tB;
       }
       return sortAsc ? comparison : -comparison;
@@ -99,10 +104,16 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
 
   const totalTuition = useMemo(() => {
     return sortedItems.reduce(
-      (sum, it) =>
-        sum + calculateDurationHours(it.startTime, it.endTime) * (it.hourlyRate || getStandardHourlyRate(it.student)),
+      (sum, it) => {
+        if (it.isTrial) return sum;
+        return sum + calculateDurationHours(it.startTime, it.endTime) * (it.hourlyRate || getStandardHourlyRate(it.student));
+      },
       0
     );
+  }, [sortedItems]);
+
+  const trialClassesCount = useMemo(() => {
+    return sortedItems.filter((i) => i.isTrial).length;
   }, [sortedItems]);
 
   return (
@@ -284,6 +295,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                 sortedItems.map((item, index) => {
                   const duration = calculateDurationHours(item.startTime, item.endTime);
                   const dayInfo = DAYS_OF_WEEK.find((d) => d.id === item.day);
+                  const dateInfo = weekDates.find((w) => w.dayId === item.day);
                   const color = SUBJECT_COLORS[item.colorKey] || {
                     bgColor: 'bg-white',
                     borderColor: 'border-slate-200',
@@ -292,8 +304,8 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                     badgeText: 'text-slate-700',
                     accentHex: '#64748B',
                   };
-                  const rate = item.hourlyRate || getStandardHourlyRate(item.student);
-                  const lineTotal = duration * rate;
+                  const rate = item.isTrial ? 0 : (item.hourlyRate || getStandardHourlyRate(item.student));
+                  const lineTotal = item.isTrial ? 0 : duration * rate;
 
                   return (
                     <tr
@@ -309,7 +321,14 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                             className="w-2.5 h-2.5 rounded-full shrink-0"
                             style={{ backgroundColor: color.accentHex }}
                           />
-                          <span>{dayInfo?.fullName || item.day}</span>
+                          <span>
+                            {dayInfo?.name || item.day}
+                            {dateInfo && (
+                              <span className="ml-1 text-[11px] font-mono text-slate-500 font-normal">
+                                ({dateInfo.dateStr})
+                              </span>
+                            )}
+                          </span>
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono tabular-nums text-slate-700 font-medium">
@@ -322,7 +341,15 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                         {duration.toFixed(1)}h
                       </td>
                       <td className="py-2.5 px-3 font-bold text-slate-900 whitespace-nowrap">
-                        {item.student}
+                        <div className="flex items-center gap-1">
+                          <span>{item.student}</span>
+                          {item.isTrial && (
+                            <span className="px-1.5 py-0.2 rounded-xs text-[9px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-0.5">
+                              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                              <span>Học thử</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-2.5 px-3 font-medium text-slate-700">
                         {item.subject}
@@ -347,10 +374,18 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                         {item.notes || '—'}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono tabular-nums text-slate-600">
-                        {formatVND(rate)}
+                        {item.isTrial ? (
+                          <span className="text-amber-700 font-bold text-[11px]">0₫ (Học thử)</span>
+                        ) : (
+                          formatVND(rate)
+                        )}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono tabular-nums font-bold text-slate-900">
-                        {formatVND(lineTotal)}
+                        {item.isTrial ? (
+                          <span className="text-amber-700 font-bold text-[11px]">0₫</span>
+                        ) : (
+                          formatVND(lineTotal)
+                        )}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <div className="inline-flex items-center gap-1">
@@ -396,6 +431,11 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
                 </td>
                 <td colSpan={6} className="py-3 px-3 text-slate-500 text-xs">
                   Trung bình: {(totalHours / (sortedItems.length || 1)).toFixed(2)}h / buổi
+                  {trialClassesCount > 0 && (
+                    <span className="ml-2 font-medium text-amber-700">
+                      (Gồm {trialClassesCount} ca học thử 0₫)
+                    </span>
+                  )}
                 </td>
                 <td className="py-3 px-3 text-right font-mono tabular-nums text-emerald-800 font-bold text-sm">
                   {formatVND(totalTuition)}

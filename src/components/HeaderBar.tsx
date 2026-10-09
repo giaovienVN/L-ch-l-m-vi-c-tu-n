@@ -9,6 +9,8 @@ interface HeaderBarProps {
   onExportCsv: () => void;
   onCopyTsv: () => void;
   onOpenAddModal: () => void;
+  onOpenTodayModal?: () => void;
+  todayClassesCount?: number;
   copied: boolean;
   totalClasses: number;
   totalHours: number;
@@ -21,6 +23,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onExportCsv,
   onCopyTsv,
   onOpenAddModal,
+  onOpenTodayModal,
+  todayClassesCount,
   copied,
   totalClasses,
   totalHours,
@@ -99,6 +103,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
           {/* Zone 3: Primary Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Today schedule button */}
+            {onOpenTodayModal && (
+              <button
+                type="button"
+                onClick={onOpenTodayModal}
+                title="Xem thông báo lịch dạy hôm nay"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Lịch hôm nay</span>
+                {todayClassesCount !== undefined && (
+                  <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">
+                    {todayClassesCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Quick Copy TSV for pasting into Google Sheets / Excel */}
             <button
               onClick={onCopyTsv}
