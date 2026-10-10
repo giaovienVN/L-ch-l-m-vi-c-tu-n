@@ -116,20 +116,27 @@
       </div>
 
       <!-- View Switcher -->
-      <nav class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
-        <button id="btn-view-grid" onclick="setViewMode('grid')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold">
+      <nav class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs font-semibold overflow-x-auto">
+        <button id="btn-view-grid" onclick="setViewMode('grid')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold shrink-0">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="2"/></svg>
           <span>Lịch Tuần Lưới</span>
         </button>
-        <button id="btn-view-timeline" onclick="setViewMode('timeline')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+        <button id="btn-view-compact" onclick="setViewMode('compact')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0" title="Chế độ xem gọn: Chỉ hiện môn, khối và giờ (ẩn thông tin học sinh & học phí)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="2" stroke-linecap="round"/><path d="M9 14l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="flex items-center gap-1">
+            <span>Lịch Môn & Khối</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800">Gọn</span>
+          </span>
+        </button>
+        <button id="btn-view-timeline" onclick="setViewMode('timeline')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
           <span>Biểu Đồ Tuần</span>
         </button>
-        <button id="btn-view-table" onclick="setViewMode('table')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+        <button id="btn-view-table" onclick="setViewMode('table')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="2"/></svg>
           <span>Bảng Excel</span>
         </button>
-        <button id="btn-view-stats" onclick="setViewMode('stats')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+        <button id="btn-view-stats" onclick="setViewMode('stats')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke-width="2" stroke-linecap="round"/></svg>
           <span>Thống Kê</span>
         </button>
@@ -236,7 +243,7 @@
             </div>
           </div>
 
-          <div class="bg-emerald-50/70 border border-emerald-100 rounded-xl px-3.5 py-2.5">
+          <div id="kpi-card-tuition" class="bg-emerald-50/70 border border-emerald-100 rounded-xl px-3.5 py-2.5">
             <span class="text-[11px] font-semibold text-emerald-700 block">Học Phí Dự Tính</span>
             <div class="flex items-baseline gap-1 mt-0.5">
               <span id="kpi-total-tuition" class="text-lg sm:text-xl font-extrabold text-emerald-950">5.09 tr</span>
@@ -244,7 +251,7 @@
             </div>
           </div>
 
-          <div class="bg-amber-50/70 border border-amber-100 rounded-xl px-3.5 py-2.5">
+          <div id="kpi-card-students" class="bg-amber-50/70 border border-amber-100 rounded-xl px-3.5 py-2.5">
             <span class="text-[11px] font-semibold text-amber-700 block">Học Sinh</span>
             <div class="flex items-baseline gap-1 mt-0.5">
               <span id="kpi-total-students" class="text-lg sm:text-xl font-extrabold text-amber-950">8</span>
@@ -252,13 +259,30 @@
             </div>
           </div>
 
+          <!-- Compact mode alternate KPI cards (hide tuition & students) -->
+          <div id="kpi-card-subjects" class="hidden bg-emerald-50/70 border border-emerald-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-emerald-700 block">Môn Giảng Dạy</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-subjects" class="text-lg sm:text-xl font-extrabold text-emerald-950">0</span>
+              <span class="text-xs text-emerald-700/80 font-medium">môn</span>
+            </div>
+          </div>
+
+          <div id="kpi-card-grades" class="hidden bg-amber-50/70 border border-amber-100 rounded-xl px-3.5 py-2.5">
+            <span class="text-[11px] font-semibold text-amber-700 block">Khối Lớp</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span id="kpi-total-grades" class="text-lg sm:text-xl font-extrabold text-amber-950">0</span>
+              <span class="text-xs text-amber-700/80 font-medium">khối</span>
+            </div>
+          </div>
+
         </div>
 
       </div>
 
-      <!-- Quick Filter by Student -->
+      <!-- Quick Filter -->
       <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px] shrink-0">Lọc theo học sinh:</span>
+        <span id="filter-title-label" class="text-slate-400 font-bold uppercase tracking-wider text-[10px] shrink-0">Lọc theo học sinh:</span>
         <div id="student-filter-chips" class="flex items-center gap-1.5 shrink-0">
           <!-- Dynamically populated chips -->
         </div>
@@ -270,6 +294,73 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3" id="grid-days-container">
         <!-- 7 Days of the week dynamically populated -->
       </div>
+    </div>
+
+    <!-- VIEW: COMPACT / PUBLIC VIEW (ONLY SUBJECT, GRADE, TIME - NO STUDENTS, NO TUITION) -->
+    <div id="view-compact" class="hidden space-y-4">
+      
+      <!-- Top banner for Compact View -->
+      <div class="bg-gradient-to-r from-amber-50/90 via-indigo-50/80 to-emerald-50/80 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-width="2" stroke-linecap="round"/><path d="M9 14l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Lịch Môn • Khối • Giờ Học</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shadow-2xs">Chế độ rút gọn</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-0.5">
+              Chỉ hiển thị <strong class="text-indigo-900 font-bold">Môn học</strong>, <strong class="text-indigo-900 font-bold">Khối</strong> và <strong class="text-indigo-900 font-bold">Khung giờ</strong>. Đã ẩn hoàn toàn tên học sinh & học phí.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <!-- Toggle Sub-layout: Grid vs Table -->
+          <div class="inline-flex items-center bg-white p-0.5 rounded-lg border border-slate-200 text-xs font-semibold shadow-xs">
+            <button id="btn-compact-layout-grid" onclick="setCompactSubLayout('grid')" class="px-2.5 py-1 rounded-md text-indigo-700 bg-indigo-50 font-bold">
+              Dạng Lưới
+            </button>
+            <button id="btn-compact-layout-table" onclick="setCompactSubLayout('table')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900">
+              Dạng Bảng
+            </button>
+          </div>
+
+          <!-- Print this view specifically -->
+          <button onclick="window.print()" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9" stroke-width="2"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke-width="2"/><rect x="6" y="14" width="12" height="8" stroke-width="2"/></svg>
+            <span>In Lịch</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-layout 1: Weekly Grid for Compact View -->
+      <div id="compact-grid-wrapper" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
+        <!-- 7 Days dynamic cards without student & tuition -->
+      </div>
+
+      <!-- Sub-layout 2: Table for Compact View -->
+      <div id="compact-table-wrapper" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-100/80 text-slate-700 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-2.5">STT</th>
+                <th class="px-4 py-2.5">Thứ Trong Tuần</th>
+                <th class="px-4 py-2.5">Khung Giờ Học</th>
+                <th class="px-4 py-2.5">Thời Lượng</th>
+                <th class="px-4 py-2.5">Môn Học</th>
+                <th class="px-4 py-2.5">Khối Lớp</th>
+              </tr>
+            </thead>
+            <tbody id="compact-table-body" class="divide-y divide-slate-100 font-medium">
+              <!-- Rendered rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- VIEW 2: TIMELINE VIEW -->
@@ -654,6 +745,32 @@
       { key: 'slate', bg: 'bg-slate-100/90', border: 'border-slate-300', text: 'text-slate-900', badgeBg: 'bg-slate-200', badgeText: 'text-slate-800' }
     ];
 
+    // Subject color palettes for compact schedule view (no student details)
+    const SUBJECT_PRESETS = [
+      { key: 'Toán', bg: 'bg-blue-50/90', border: 'border-blue-300', text: 'text-blue-900', badgeBg: 'bg-blue-600', badgeText: 'text-white' },
+      { key: 'Hoá', bg: 'bg-purple-50/90', border: 'border-purple-300', text: 'text-purple-900', badgeBg: 'bg-purple-600', badgeText: 'text-white' },
+      { key: 'Lý', bg: 'bg-cyan-50/90', border: 'border-cyan-300', text: 'text-cyan-900', badgeBg: 'bg-cyan-600', badgeText: 'text-white' },
+      { key: 'Anh', bg: 'bg-emerald-50/90', border: 'border-emerald-300', text: 'text-emerald-900', badgeBg: 'bg-emerald-600', badgeText: 'text-white' },
+      { key: 'Văn', bg: 'bg-amber-50/90', border: 'border-amber-300', text: 'text-amber-900', badgeBg: 'bg-amber-600', badgeText: 'text-white' },
+      { key: 'Sinh', bg: 'bg-teal-50/90', border: 'border-teal-300', text: 'text-teal-900', badgeBg: 'bg-teal-600', badgeText: 'text-white' },
+      { key: 'Scratch', bg: 'bg-orange-50/90', border: 'border-orange-300', text: 'text-orange-900', badgeBg: 'bg-orange-600', badgeText: 'text-white' },
+      { key: 'Tin', bg: 'bg-indigo-50/90', border: 'border-indigo-300', text: 'text-indigo-900', badgeBg: 'bg-indigo-600', badgeText: 'text-white' }
+    ];
+
+    function getSubjectPalette(subjectName) {
+      if (!subjectName) return SUBJECT_PRESETS[0];
+      const s = subjectName.trim().toLowerCase();
+      for (const p of SUBJECT_PRESETS) {
+        if (s.includes(p.key.toLowerCase())) return p;
+      }
+      let hash = 0;
+      for (let i = 0; i < subjectName.length; i++) {
+        hash = (hash << 5) - hash + subjectName.charCodeAt(i);
+        hash |= 0;
+      }
+      return SUBJECT_PRESETS[Math.abs(hash) % SUBJECT_PRESETS.length];
+    }
+
     function getStudentPalette(studentName, colorKey) {
       if (colorKey && colorKey !== 'auto') {
         const found = STUDENT_PALETTES.find(p => p.key === colorKey);
@@ -671,9 +788,32 @@
 
     // --- STATE VARIABLES ---
     let scheduleItems = loadScheduleFromStorage();
-    let currentViewMode = 'grid'; // 'grid' | 'timeline' | 'table' | 'stats'
+    let currentViewMode = 'grid'; // 'grid' | 'compact' | 'timeline' | 'table' | 'stats'
     let currentWeekOffset = 0; // 0 = this week, -1 = last week, +1 = next week
     let selectedStudentFilter = null; // null = all
+    let selectedSubjectFilter = null; // null = all (used in compact view)
+    let compactSubLayout = 'grid'; // 'grid' | 'table'
+
+    // Sub-layout switcher for compact view
+    function setCompactSubLayout(layout) {
+      compactSubLayout = layout;
+      const gridEl = document.getElementById('compact-grid-wrapper');
+      const tableEl = document.getElementById('compact-table-wrapper');
+      const btnGrid = document.getElementById('btn-compact-layout-grid');
+      const btnTable = document.getElementById('btn-compact-layout-table');
+
+      if (layout === 'grid') {
+        gridEl.classList.remove('hidden');
+        tableEl.classList.add('hidden');
+        btnGrid.className = 'px-2.5 py-1 rounded-md text-indigo-700 bg-indigo-50 font-bold';
+        btnTable.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900';
+      } else {
+        gridEl.classList.add('hidden');
+        tableEl.classList.remove('hidden');
+        btnTable.className = 'px-2.5 py-1 rounded-md text-indigo-700 bg-indigo-50 font-bold';
+        btnGrid.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900';
+      }
+    }
 
     // Load from LocalStorage
     function loadScheduleFromStorage() {
@@ -765,19 +905,22 @@
     function setViewMode(mode) {
       currentViewMode = mode;
       
-      const views = ['grid', 'timeline', 'table', 'stats'];
+      const views = ['grid', 'compact', 'timeline', 'table', 'stats'];
       views.forEach(v => {
         const el = document.getElementById(`view-${v}`);
         const btn = document.getElementById(`btn-view-${v}`);
-        if (v === mode) {
-          el.classList.remove('hidden');
-          btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold';
-        } else {
-          el.classList.add('hidden');
-          btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900';
+        if (el && btn) {
+          if (v === mode) {
+            el.classList.remove('hidden');
+            btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-indigo-600 bg-white shadow-xs font-bold shrink-0';
+          } else {
+            el.classList.add('hidden');
+            btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 shrink-0';
+          }
         }
       });
 
+      renderHeaderAndSummary();
       renderAllViews();
     }
 
@@ -819,6 +962,8 @@
       let totalHours = 0;
       let totalTuition = 0;
       const studentsSet = new Set();
+      const subjectsSet = new Set();
+      const gradesSet = new Set();
 
       scheduleItems.forEach(item => {
         const hours = calculateDurationHours(item.startTime, item.endTime);
@@ -828,6 +973,8 @@
           totalTuition += Math.round(hours * rate);
         }
         if (item.student) studentsSet.add(item.student);
+        if (item.subject) subjectsSet.add(item.subject);
+        if (item.grade) gradesSet.add(item.grade);
       });
 
       document.getElementById('kpi-total-classes').textContent = scheduleItems.length;
@@ -835,44 +982,108 @@
       document.getElementById('kpi-total-tuition').textContent = (totalTuition / 1000000).toFixed(2) + ' tr';
       document.getElementById('kpi-total-students').textContent = studentsSet.size;
 
-      // Render filter chips
+      const kpiSubjects = document.getElementById('kpi-total-subjects');
+      const kpiGrades = document.getElementById('kpi-total-grades');
+      if (kpiSubjects) kpiSubjects.textContent = subjectsSet.size;
+      if (kpiGrades) kpiGrades.textContent = gradesSet.size;
+
+      // Handle card visibility based on compact view
+      const isCompact = currentViewMode === 'compact';
+      const cardTuition = document.getElementById('kpi-card-tuition');
+      const cardStudents = document.getElementById('kpi-card-students');
+      const cardSubjects = document.getElementById('kpi-card-subjects');
+      const cardGrades = document.getElementById('kpi-card-grades');
+      const filterLabel = document.getElementById('filter-title-label');
       const chipsContainer = document.getElementById('student-filter-chips');
-      chipsContainer.innerHTML = '';
 
-      // "All" chip
-      const allBtn = document.createElement('button');
-      allBtn.className = `px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
-        selectedStudentFilter === null 
-          ? 'bg-slate-900 text-white shadow-xs' 
-          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`;
-      allBtn.textContent = `Tất cả (${scheduleItems.length})`;
-      allBtn.onclick = () => {
-        selectedStudentFilter = null;
-        renderHeaderAndSummary();
-        renderAllViews();
-      };
-      chipsContainer.appendChild(allBtn);
+      if (isCompact) {
+        if (cardTuition) cardTuition.classList.add('hidden');
+        if (cardStudents) cardStudents.classList.add('hidden');
+        if (cardSubjects) cardSubjects.classList.remove('hidden');
+        if (cardGrades) cardGrades.classList.remove('hidden');
+        if (filterLabel) filterLabel.textContent = 'Lọc theo môn học:';
 
-      // Student chips
-      const sortedStudents = Array.from(studentsSet).sort();
-      sortedStudents.forEach(st => {
-        const count = scheduleItems.filter(i => i.student === st).length;
-        const btn = document.createElement('button');
-        const isSelected = selectedStudentFilter === st;
-        btn.className = `px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
-          isSelected 
-            ? 'bg-indigo-600 text-white shadow-xs' 
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        chipsContainer.innerHTML = '';
+
+        // "All subjects" chip
+        const allBtn = document.createElement('button');
+        allBtn.className = `px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
+          selectedSubjectFilter === null 
+            ? 'bg-slate-900 text-white shadow-xs' 
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`;
-        btn.innerHTML = `<span>${st}</span><span class="text-[10px] opacity-75 font-mono">(${count})</span>`;
-        btn.onclick = () => {
-          selectedStudentFilter = isSelected ? null : st;
+        allBtn.textContent = `Tất cả môn (${scheduleItems.length})`;
+        allBtn.onclick = () => {
+          selectedSubjectFilter = null;
+          renderHeaderAndSummary();
+          renderCompactView();
+        };
+        chipsContainer.appendChild(allBtn);
+
+        // Subject chips
+        const sortedSubjects = Array.from(subjectsSet).sort();
+        sortedSubjects.forEach(sb => {
+          const count = scheduleItems.filter(i => (i.subject || '').trim() === sb).length;
+          const btn = document.createElement('button');
+          const isSelected = selectedSubjectFilter === sb;
+          btn.className = `px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            isSelected 
+              ? 'bg-indigo-600 text-white shadow-xs' 
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`;
+          btn.innerHTML = `<span>${sb}</span><span class="text-[10px] opacity-75 font-mono">(${count})</span>`;
+          btn.onclick = () => {
+            selectedSubjectFilter = isSelected ? null : sb;
+            renderHeaderAndSummary();
+            renderCompactView();
+          };
+          chipsContainer.appendChild(btn);
+        });
+
+      } else {
+        if (cardTuition) cardTuition.classList.remove('hidden');
+        if (cardStudents) cardStudents.classList.remove('hidden');
+        if (cardSubjects) cardSubjects.classList.add('hidden');
+        if (cardGrades) cardGrades.classList.add('hidden');
+        if (filterLabel) filterLabel.textContent = 'Lọc theo học sinh:';
+
+        chipsContainer.innerHTML = '';
+
+        // "All" chip
+        const allBtn = document.createElement('button');
+        allBtn.className = `px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
+          selectedStudentFilter === null 
+            ? 'bg-slate-900 text-white shadow-xs' 
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        }`;
+        allBtn.textContent = `Tất cả (${scheduleItems.length})`;
+        allBtn.onclick = () => {
+          selectedStudentFilter = null;
           renderHeaderAndSummary();
           renderAllViews();
         };
-        chipsContainer.appendChild(btn);
-      });
+        chipsContainer.appendChild(allBtn);
+
+        // Student chips
+        const sortedStudents = Array.from(studentsSet).sort();
+        sortedStudents.forEach(st => {
+          const count = scheduleItems.filter(i => i.student === st).length;
+          const btn = document.createElement('button');
+          const isSelected = selectedStudentFilter === st;
+          btn.className = `px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
+            isSelected 
+              ? 'bg-indigo-600 text-white shadow-xs' 
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`;
+          btn.innerHTML = `<span>${st}</span><span class="text-[10px] opacity-75 font-mono">(${count})</span>`;
+          btn.onclick = () => {
+            selectedStudentFilter = isSelected ? null : st;
+            renderHeaderAndSummary();
+            renderAllViews();
+          };
+          chipsContainer.appendChild(btn);
+        });
+      }
     }
 
     // --- RENDER GRID VIEW ---
@@ -990,6 +1201,155 @@
         dayCard.appendChild(bodyDiv);
         container.appendChild(dayCard);
       });
+    }
+
+    // --- RENDER COMPACT / PUBLIC VIEW (ONLY SUBJECT, GRADE & TIME - NO STUDENT, NO TUITION) ---
+    function renderCompactView() {
+      const gridContainer = document.getElementById('compact-grid-wrapper');
+      const tbody = document.getElementById('compact-table-body');
+      if (!gridContainer || !tbody) return;
+
+      gridContainer.innerHTML = '';
+      tbody.innerHTML = '';
+
+      const weekDates = getWeekDates(currentWeekOffset);
+      const today = new Date();
+
+      // 1. Render Grid Sub-layout (7 Days)
+      DAYS_ORDER.forEach((dayKey, index) => {
+        const dateObj = weekDates[index];
+        const isToday = isSameDate(dateObj, today);
+
+        let dayItems = scheduleItems.filter(i => i.day === dayKey);
+        if (selectedSubjectFilter) {
+          dayItems = dayItems.filter(i => (i.subject || '').trim() === selectedSubjectFilter);
+        }
+        dayItems.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        const dayCard = document.createElement('div');
+        dayCard.className = `bg-white rounded-2xl border ${
+          isToday ? 'border-amber-400 ring-2 ring-amber-200/80 shadow-md' : 'border-slate-200/90 shadow-xs'
+        } flex flex-col min-h-[360px] overflow-hidden`;
+
+        // Day Header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = `p-3 border-b border-slate-100 flex items-center justify-between ${
+          isToday ? 'bg-gradient-to-r from-amber-50 to-orange-50/70' : 'bg-slate-50/70'
+        }`;
+        headerDiv.innerHTML = `
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-sm ${isToday ? 'text-amber-950' : 'text-slate-800'}">
+                ${DAY_NAMES[dayKey]}
+              </span>
+              ${isToday ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-600 text-white uppercase tracking-wider">Hôm nay</span>' : ''}
+            </div>
+            <span class="text-[11px] font-semibold text-slate-500">${formatDateDM(dateObj)}</span>
+          </div>
+          <span class="text-xs font-mono font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+            ${dayItems.length} ca
+          </span>
+        `;
+        dayCard.appendChild(headerDiv);
+
+        // Classes Body (Only Time, Subject, Grade - strictly no student, no tuition)
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'p-2.5 flex-1 space-y-2.5 overflow-y-auto max-h-[520px]';
+
+        if (dayItems.length === 0) {
+          bodyDiv.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center py-12 text-center px-2">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 14 14" stroke-width="2"/></svg>
+              </div>
+              <span class="text-[11px] text-slate-400 font-medium">Trống ca</span>
+            </div>
+          `;
+        } else {
+          dayItems.forEach(item => {
+            const duration = calculateDurationHours(item.startTime, item.endTime);
+            const palette = getSubjectPalette(item.subject);
+
+            const card = document.createElement('div');
+            card.className = `p-3 rounded-xl border ${palette.bg} ${palette.border} space-y-2 shadow-2xs hover:shadow-sm transition-all`;
+            card.innerHTML = `
+              <!-- Giờ học & Thời lượng -->
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 font-mono text-xs font-black text-slate-900 bg-white/95 px-2 py-0.5 rounded-md border border-slate-200/80 shadow-2xs">
+                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke-width="2"/></svg>
+                  ${item.startTime} - ${item.endTime}
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 font-mono">
+                  ${formatDurationText(duration)}
+                </span>
+              </div>
+
+              <!-- Môn học & Khối -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-black ${palette.badgeBg} ${palette.badgeText} shadow-xs">
+                  Môn: ${item.subject || 'Chưa đặt'}
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-extrabold bg-slate-800 text-white shadow-xs">
+                  Khối ${item.grade || '-'}
+                </span>
+              </div>
+            `;
+            bodyDiv.appendChild(card);
+          });
+        }
+
+        dayCard.appendChild(bodyDiv);
+        gridContainer.appendChild(dayCard);
+      });
+
+      // 2. Render Table Sub-layout
+      let allSortedItems = [...scheduleItems];
+      if (selectedSubjectFilter) {
+        allSortedItems = allSortedItems.filter(i => (i.subject || '').trim() === selectedSubjectFilter);
+      }
+      allSortedItems.sort((a, b) => {
+        const dDiff = DAYS_ORDER.indexOf(a.day) - DAYS_ORDER.indexOf(b.day);
+        if (dDiff !== 0) return dDiff;
+        return a.startTime.localeCompare(b.startTime);
+      });
+
+      if (allSortedItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-400 font-medium">
+              Không có ca học nào cho môn đã chọn
+            </td>
+          </tr>
+        `;
+      } else {
+        allSortedItems.forEach((item, idx) => {
+          const duration = calculateDurationHours(item.startTime, item.endTime);
+          const palette = getSubjectPalette(item.subject);
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50 transition-colors';
+          tr.innerHTML = `
+            <td class="px-4 py-2.5 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
+            <td class="px-4 py-2.5 font-bold text-slate-800">${DAY_NAMES[item.day]}</td>
+            <td class="px-4 py-2.5 font-mono font-bold text-slate-900">
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded text-xs">
+                ${item.startTime} - ${item.endTime}
+              </span>
+            </td>
+            <td class="px-4 py-2.5 font-mono text-slate-600">${formatDurationText(duration)}</td>
+            <td class="px-4 py-2.5">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold ${palette.badgeBg} ${palette.badgeText}">
+                ${item.subject || 'Môn học'}
+              </span>
+            </td>
+            <td class="px-4 py-2.5 font-bold text-slate-800">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
+                Khối ${item.grade || '-'}
+              </span>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
     }
 
     // --- RENDER TIMELINE VIEW ---
@@ -1207,6 +1567,7 @@
     // --- RE-RENDER ALL ---
     function renderAllViews() {
       if (currentViewMode === 'grid') renderGridView();
+      else if (currentViewMode === 'compact') renderCompactView();
       else if (currentViewMode === 'timeline') renderTimelineView();
       else if (currentViewMode === 'table') renderTableView();
       else if (currentViewMode === 'stats') renderStatsView();
